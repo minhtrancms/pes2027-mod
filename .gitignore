@@ -8,5 +8,5 @@ __pycache__/
 /online/client.json
 *.log
 .hash-cache.json
-build-report.json
-
+client.json
+PES2027-online.json
