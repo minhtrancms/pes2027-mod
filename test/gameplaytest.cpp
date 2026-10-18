@@ -333,7 +333,7 @@ int main() {
       auto suarez = newObj()->put("initial_base_team_id", 108)->put("uniform_number", 9)->put("parameters", newArr()->put(11));
       check(OfflineServer::z27RestorePlayerId(suarez, 40352, 111111LL) == 17592454614507LL, "Suarez preserved as Barca #9 CF");
 
-      check(OfflineServer::z27RestorePlayerId(nullptr, 40352, 12345LL) == 88029918174624LL, "Neymar fallback to Santos CF special card");
+      check(OfflineServer::z27RestorePlayerId(nullptr, 40352, 12345LL) == 89061784067488LL, "Neymar fallback to standard card");
       check(OfflineServer::z27RestorePlayerId(nullptr, 106788187839904LL, 123LL) == 106788187839904LL, "Existing 64-bit ID preserved");
     }
     std::filesystem::remove_all(root);

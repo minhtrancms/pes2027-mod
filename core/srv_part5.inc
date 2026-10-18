@@ -211,28 +211,24 @@ ObjP refreshZiruGameplayerFromCanonical(const ObjP& jo) {
     if (gid) {
       int64_t id = gid->optLong("id", 0);
       int64_t serial = gid->optLong("serial", 0);
-      int64_t restored = z27RestorePlayerId(jo, id, serial, 0);
+      ObjP cur = jo;
+      JStr lp;
+      if (serial > 0 && (lp = loadPlayer(serial)) && !lp->empty()) {
+        cur = Object::parse(*lp);
+        ObjP gp = cur->optJSONObject("gameplayer");
+        if (gp) cur = gp;
+      }
+      int64_t restored = z27RestorePlayerId(cur, id, serial, 0);
       if (restored != id) {
         id = restored;
         gid->put("id", (long long)id);
       }
+      ObjP g2 = cur->optJSONObject("gameplayer_id");
+      if (g2) {
+        g2->put("id", (long long)id);
+        if (serial > 0) g2->put("serial", (long long)serial);
+      }
       if (id > 0) {
-        ObjP cur = jo;
-        JStr lp;
-        if (serial > 0 && (lp = loadPlayer(serial)) && !lp->empty()) {
-          cur = Object::parse(*lp);
-          ObjP gp = cur->optJSONObject("gameplayer");
-          if (gp) cur = gp;
-          ObjP g2 = cur->optJSONObject("gameplayer_id");
-          if (g2) {
-            int64_t g2Id = g2->optLong("id", 0);
-            int64_t g2Restored = z27RestorePlayerId(cur, g2Id, serial, id);
-            if (g2Restored != g2Id) {
-              g2->put("id", (long long)g2Restored);
-            }
-          }
-          if (!g2 || g2->optLong("id") != id) cur = jo;
-        }
         ObjP w = getZiruPlayerWrapper(Value((long long)id), false);
         if (!w) {
           w = getZiruPlayerWrapperByBaseId((int32_t)(id & 0xFFFFFF));

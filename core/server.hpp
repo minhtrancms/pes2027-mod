@@ -201,7 +201,8 @@ class OfflineServer {
           if (gp) li = gp->optJSONObject("level_info");
         }
         int ll = li ? li->optInt("level_limit", 0) : 0;
-        if (ll == 21 || p0 == 11) return 106652627934624LL;
+        if (ll == 21) return 106652627934624LL;
+        if (ll == 25) return 105627472928160LL;
         if (ll == 19) return 89061784067488LL;
         if (ll == 34) return 106788187839904LL;
         if (ll == 36) return 88029918174624LL;
@@ -212,9 +213,10 @@ class OfflineServer {
       if (serial == 359042717000000364LL || serial == 359042717000000400LL) return 106652627934624LL;
       if (serial == 359042717000000430LL || serial == 359042717000000450LL) return 105627472928160LL;
       if (serial == 359042717000000537LL || serial == 359042717000000500LL) return 88029918174624LL;
+      if (serial == 359042717000000100LL || serial == 359042717000000114LL) return 89061784067488LL;
 
       if (currentId > 0xFFFFFF) return currentId;
-      return 88029918174624LL;
+      return 89061784067488LL;
     }
 
 
