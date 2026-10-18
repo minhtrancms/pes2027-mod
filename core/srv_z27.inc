@@ -216,7 +216,14 @@ ObjP z27Squad(int32_t id) {
       if (gid) {
         int64_t pid = gid->optLong("id", 0);
         int64_t serial = gid->optLong("serial", 0);
-        int64_t restored = z27RestorePlayerId(item, pid, serial, 0);
+        ObjP playerInfo = item;
+        JStr lp;
+        if (serial > 0 && (lp = loadPlayer(serial)) && !lp->empty()) {
+          ObjP sv = Object::parse(*lp);
+          if (sv->optJSONObject("gameplayer")) sv = sv->getJSONObject("gameplayer");
+          playerInfo = sv;
+        }
+        int64_t restored = z27RestorePlayerId(playerInfo, pid, serial, 0);
         if (restored != pid) {
           gid->put("id", (long long)restored);
           pid = restored;

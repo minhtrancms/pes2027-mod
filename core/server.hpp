@@ -154,14 +154,8 @@ class OfflineServer {
 
   static int64_t z27RestorePlayerId(const ObjP& cur, int64_t currentId, int64_t serial = 0, int64_t templatePid = 0) {
     int32_t bid = (int32_t)(currentId & 0xFFFFFF);
-    if (currentId > 0xFFFFFF) return currentId;
-    if (templatePid > 0xFFFFFF && (templatePid & 0xFFFFFF) == bid) return templatePid;
 
     if (bid == 40352) {
-      if (serial == 359042717000000364LL || serial == 359042717000000400LL) return 106652627934624LL;
-      if (serial == 359042717000000430LL || serial == 359042717000000450LL) return 105627472928160LL;
-      if (serial == 359042717000000537LL || serial == 359042717000000500LL) return 88029918174624LL;
-
       if (cur) {
         ArrP params = cur->optJSONArray("parameters");
         if (!params) {
@@ -213,8 +207,16 @@ class OfflineServer {
         if (ll == 36) return 88029918174624LL;
         if (ll == 31) return 88044145253792LL;
       }
+
+      if (templatePid > 0xFFFFFF && (templatePid & 0xFFFFFF) == bid) return templatePid;
+      if (serial == 359042717000000364LL || serial == 359042717000000400LL) return 106652627934624LL;
+      if (serial == 359042717000000430LL || serial == 359042717000000450LL) return 105627472928160LL;
+      if (serial == 359042717000000537LL || serial == 359042717000000500LL) return 88029918174624LL;
+
+      if (currentId > 0xFFFFFF) return currentId;
       return 88029918174624LL;
     }
+
 
     if (bid == 44379) {
       if (serial == 359042717000000534LL) return 105639552527707LL;

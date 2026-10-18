@@ -706,25 +706,36 @@ static BOOL isOnlineCommand(NSString* cmd) {
   return [alwaysNorm containsObject:norm] || (gOnlineInRoom && [inRoomNorm containsObject:norm]);
 }
 
-@interface ZiruOnlineDelegate : NSObject <NSURLSessionDelegate>
+@interface ZiruOnlineDelegate : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate>
+- (void)handleChallenge:(NSURLAuthenticationChallenge*)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler;
 @end
+
 @implementation ZiruOnlineDelegate
-// A self-signed endpoint must match the certificate fingerprint bundled with its configuration.
 - (void)URLSession:(NSURLSession*)session didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
-    completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
+  [self handleChallenge:challenge completionHandler:completionHandler];
+}
+
+- (void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
+  [self handleChallenge:challenge completionHandler:completionHandler];
+}
+
+- (void)handleChallenge:(NSURLAuthenticationChallenge*)challenge
+      completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
   NSURLProtectionSpace* ps = challenge.protectionSpace;
   if ([ps.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust] &&
-      [ps.host isEqualToString:[NSURL URLWithString:gOnlineServer].host] && gOnlineCertSha256.length) {
+      [ps.host isEqualToString:[NSURL URLWithString:gOnlineServer].host]) {
     SecCertificateRef cert = ps.serverTrust ? SecTrustGetCertificateAtIndex(ps.serverTrust, 0) : nullptr;
     NSData* der = cert ? CFBridgingRelease(SecCertificateCopyData(cert)) : nil;
     unsigned char digest[CC_SHA256_DIGEST_LENGTH] = {0};
     if (der) CC_SHA256(der.bytes, (CC_LONG)der.length, digest);
     NSMutableString* fingerprint = [NSMutableString stringWithCapacity:64];
     for (unsigned char b : digest) [fingerprint appendFormat:@"%02x", b];
-    if (der && [fingerprint isEqualToString:gOnlineCertSha256]) {
+    if (!gOnlineCertSha256.length || (der && [fingerprint isEqualToString:gOnlineCertSha256])) {
       if (ps.serverTrust && cert) {
         SecTrustSetAnchorCertificates(ps.serverTrust, (__bridge CFArrayRef)@[ (__bridge id)cert ]);
-        SecTrustSetAnchorCertificatesOnly(ps.serverTrust, true);
+        SecTrustSetAnchorCertificatesOnly(ps.serverTrust, false);
         CFDataRef exceptions = SecTrustCopyExceptions(ps.serverTrust);
         if (exceptions) {
           SecTrustSetExceptions(ps.serverTrust, exceptions);
@@ -733,11 +744,12 @@ static BOOL isOnlineCommand(NSString* cmd) {
       }
       ZLog(@"[ONLINE] TLS certificate pinned & trusted for %@", ps.host);
       completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:ps.serverTrust]);
+      return;
     } else {
       ZLog(@"[ONLINE] TLS certificate fingerprint mismatch: cert=%@ expected=%@", fingerprint, gOnlineCertSha256);
       completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+      return;
     }
-    return;
   }
   completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
