@@ -10,27 +10,18 @@
       "event_recommend_info_type": "BOTH"
     },
     {
-      "event_banner": "/banner/event/090003/285777dcf7f1b1cec9db489b29b45bb542e6a410243fc04ce36598df37d027eb",
-      "event_match_label": "DREAM",
-      "event_info_type": "AI_MATCH",
-      "event_end_time": 1893455999,
-      "event_recommend_kind": "NONE",
-      "event_recommend_str": "",
-      "event_recommend_info_type": "BOTH"
-    },
-    {
       "event_banner": "/banner/event/090004/b66d8c79c22ec135792f0dfd81ae6a0af43fe007b337d9611ab53b4a3299143c",
       "event_match_label": "DREAM",
-      "event_info_type": "AI_MATCH",
+      "event_info_type": "USER_MATCH",
       "event_end_time": 1893455999,
       "event_recommend_kind": "NONE",
       "event_recommend_str": "",
       "event_recommend_info_type": "BOTH"
     },
     {
-      "event_banner": "/banner/event/090005/c5f0ef42ab3559df093fbfb36441eb4383676c128081394f58d73a9e035fc404",
+      "event_banner": "/banner/event/090003/285777dcf7f1b1cec9db489b29b45bb542e6a410243fc04ce36598df37d027eb",
       "event_match_label": "DREAM",
-      "event_info_type": "AI_MATCH",
+      "event_info_type": "BOTH",
       "event_end_time": 1893455999,
       "event_recommend_kind": "NONE",
       "event_recommend_str": "",

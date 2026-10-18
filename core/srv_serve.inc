@@ -605,6 +605,106 @@ Response serveInner(Request& r) {
   if (isCmd("CMD_GET_VSCOM_OPPONENT")) return ziruMyLeagueIsActive() ? handleZiruMyLeagueOpponentV72() : handleZiruLeagueOpponentDynamicV75();
   if (isCmd("CMD_START_GAME")) return ziruMyLeagueIsActive() ? handleZiruMyLeagueStartGameV71() : handleZiruLeagueStartGameDynamic();
   if (isCmd("CMD_GET_VSCOM_GAME_RESULT")) return ziruMyLeagueIsActive() ? handleZiruMyLeagueResultV71() : handleZiruLeagueResult();
+  if (isCmd("CMD_GET_SUGOROKU")) {
+    ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
+    long long rq = req ? req->optLong("rqid", 1) : 1;
+    ObjP jo = newObj();
+    jo->put("result", "NOERR");
+    jo->put("rqid", rq);
+    jo->put("msgid", "CMD_GET_SUGOROKU");
+    int loc = ziruLeagueLoadInt("ziru_sugoroku_loc", 0);
+    int loop = ziruLeagueLoadInt("ziru_sugoroku_loop", 1);
+    if (loop <= 0) loop = 1;
+    jo->put("current_location", loc);
+    jo->put("current_go_around_num", loop);
+    jo->put("go_around_loop", loop);
+    jo->put("go_around_present_hide", "NO");
+    jo->put("squares_present_list", newArr());
+    jo->put("go_around_present_list", newArr());
+    jo->put("result_square_list", newArr());
+    jo->put("kicker_id", 0);
+    jo->put("gk_id", 0);
+    jo->put("uniform_id", 0);
+    jo->put("pk_success_rate", 100);
+    jo->put("ball_id", 0);
+    jo->put("attention_demo", "NO");
+    jo->put("kicker_uniform_number", 10);
+    jo->put("gk_uniform_number", 1);
+    jo->put("controlled_player_list", newArr());
+    jo->put("other_player_list", newArr());
+    jo->put("enemy_uniform", newObj());
+    return serveObjectAsEncryptedMsgPack(jo);
+  }
+  if (isCmd("CMD_SET_SUGOROKU")) {
+    ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
+    long long rq = req ? req->optLong("rqid", 1) : 1;
+    ObjP jo = newObj();
+    jo->put("result", "NOERR");
+    jo->put("rqid", rq);
+    jo->put("msgid", "CMD_SET_SUGOROKU");
+    int beforeLoc = req ? req->optInt("before_location", 0) : 0;
+    int afterLoc = req ? req->optInt("after_current_location", beforeLoc + 3) : beforeLoc + 3;
+    int loop = req ? req->optInt("after_go_around_num", 1) : 1;
+    if (loop <= 0) loop = 1;
+    ziruLeagueSaveInt("ziru_sugoroku_loc", afterLoc);
+    ziruLeagueSaveInt("ziru_sugoroku_loop", loop);
+    jo->put("sugoroku_result", "SUCCESS");
+    jo->put("fail_reason", 0);
+    jo->put("stage_id", req ? req->optInt("stage_id", 1) : 1);
+    jo->put("before_location", beforeLoc);
+    jo->put("before_go_around_num", req ? req->optInt("before_go_around_num", 1) : 1);
+    jo->put("after_current_location", afterLoc);
+    jo->put("after_go_around_num", loop);
+    jo->put("get_squares_present_list", newArr());
+    jo->put("get_go_around_present_list", newArr());
+    return serveObjectAsEncryptedMsgPack(jo);
+  }
+  if (isCmd("CMD_GET_MANNER_WARN")) {
+    ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
+    long long rq = req ? req->optLong("rqid", 1) : 1;
+    ObjP jo = newObj();
+    jo->put("result", "NOERR");
+    jo->put("rqid", rq);
+    jo->put("msgid", "CMD_GET_MANNER_WARN");
+    jo->put("warn_kind", "NONE");
+    return serveObjectAsEncryptedMsgPack(jo);
+  }
+  if (isCmd("CMD_GET_USER_COMPE_SERVER_PARAM")) {
+    ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
+    long long rq = req ? req->optLong("rqid", 1) : 1;
+    ObjP jo = newObj();
+    jo->put("result", "NOERR");
+    jo->put("rqid", rq);
+    jo->put("msgid", "CMD_GET_USER_COMPE_SERVER_PARAM");
+    jo->put("is_exist", "NO");
+    jo->put("param_info", newObj());
+    return serveObjectAsEncryptedMsgPack(jo);
+  }
+  if (isCmd("CMD_GET_USER_COMPE_TOTAL_RECORD")) {
+    ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
+    long long rq = req ? req->optLong("rqid", 1) : 1;
+    ObjP jo = newObj();
+    jo->put("result", "NOERR");
+    jo->put("rqid", rq);
+    jo->put("msgid", "CMD_GET_USER_COMPE_TOTAL_RECORD");
+    jo->put("total_record_list", newArr());
+    return serveObjectAsEncryptedMsgPack(jo);
+  }
+  if (isCmd("CMD_SEND_ANALYSIS_LOG")) {
+    return handleZiruStartupAck("CMD_SEND_ANALYSIS_LOG");
+  }
+  if (isCmd("CMD_GET_ML_EVENT_INFO")) {
+    ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
+    long long rq = req ? req->optLong("rqid", 1) : 1;
+    ObjP jo = newObj();
+    jo->put("result", "NOERR");
+    jo->put("rqid", rq);
+    jo->put("msgid", "CMD_GET_ML_EVENT_INFO");
+    jo->put("event_id", 100004);
+    jo->put("event_end_time", 1893455999);
+    jo->put("event_status", "OPEN");
+    return serveObjectAsEncryptedMsgPack(jo);
+  }
   try {
     const char* a = routeAsset(uri);
     if (a) {
@@ -625,6 +725,9 @@ Response serveInner(Request& r) {
       } catch (const IOEx&) {
         zs::logw("OFFLINE_SERVER", " [SERVER_MISS] No asset for fallback: " + rep);
       }
+    }
+    if (endsWith(uri, ".txt") || contains(uri, "/info/")) {
+      return newFixedText(200, "OK");
     }
     zs::logw("OFFLINE_SERVER", " [SERVER_NOT_FOUND] No match for: " + uri);
     logRequest(uri, "GENERIC_NO_RESPONSE");

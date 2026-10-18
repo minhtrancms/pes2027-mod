@@ -91,6 +91,29 @@
       "coop_vscom_win_point_bonus": [],
       "coop_vscom_cpu_level_rate": [],
       "squad_challenge_event_log": []
+    },
+    {
+      "event_id": 100004,
+      "entry_status": "ENTRY",
+      "use_preset_team_id": 0,
+      "age_category": "FULL",
+      "is_ranking_fix": "NO",
+      "pt_event_point": 0,
+      "pt_cleared_point": 0,
+      "pt_selected_com_lv": "REGULAR",
+      "pt_rest_point": 0,
+      "pt_next_reward": [],
+      "pt_is_next_reward_dialog": "NO",
+      "pt_main_rest_point": 0,
+      "pt_main_reward": [],
+      "pt_tour_bonus_select_nation_id": 0,
+      "ch_mission_log": [],
+      "coop_daily_point": 0,
+      "coop_daily_point_limit": 0,
+      "coop_vscom_win_point_normal": [],
+      "coop_vscom_win_point_bonus": [],
+      "coop_vscom_cpu_level_rate": [],
+      "squad_challenge_event_log": []
     }
   ],
   "event_list": [
@@ -1443,9 +1466,160 @@
         ]
       },
       "collabo_event_info": []
+    },
+    {
+      "event_id": 100004,
+      "event_name": "My League Sprint - \u0110ua T\u1ed1c \u0110\u1ed9 & Th\u1eed Th\u00e1ch",
+      "event_list_disp_name": "My League Sprint",
+      "major_category": "SQUAD_CHALLENGE",
+      "is_vs_user": "NO",
+      "is_custom_team": "YES",
+      "event_start_time": 1700000000,
+      "event_end_time": 1999999999,
+      "event_panel_open_time": 0,
+      "event_panel_close_time": 0,
+      "match_entry": [],
+      "is_nonsupport": "NO",
+      "description_text": "Th\u1eed th\u00e1ch My League Sprint! V\u01b0\u1ee3t qua c\u00e1c ch\u1eb7ng \u0111ua t\u1ed1c \u0111\u1ed9 \u0111\u1ec9nh cao, t\u00edch l\u0169y \u0111i\u1ec3m th\u01b0\u1edfng v\u00e0 nh\u1eadn qu\u00e0 \u0111\u1ed9c quy\u1ec1n cho \u0111\u1ed9i b\u00f3ng!",
+      "rule_detail_text": "",
+      "is_championship_pro": "NO",
+      "is_official_competition": "NO",
+      "esports_mode_kind": "NONE",
+      "is_in_esports_menu": "NO",
+      "link_title_list": [],
+      "link_url_list": [],
+      "achievement_name_list": [
+        "My League Sprint"
+      ],
+      "is_local_gamerelay": "NO",
+      "has_ranking": "NO",
+      "fame_id_list": [],
+      "collabo_kind": "COLLABO_KIND_NONE",
+      "campaign_info": [
+        {
+          "campaign_id": 895,
+          "bg_file_name": "campaignBG_030"
+        }
+      ],
+      "main_reward_list": [
+        {
+          "reward_count": 1,
+          "event_reward_list": [
+            {
+              "present_id": 0,
+              "present_type": "COIN",
+              "count": 50,
+              "name": "NotImplement",
+              "title": "NotImplement",
+              "reason": "SQUAD_CHALLENGE_EVENT",
+              "reason_num": 0,
+              "random_reward_rate": 0
+            }
+          ],
+          "rank_from": 0,
+          "rank_to": 0,
+          "panel_mission_progress_info": []
+        }
+      ],
+      "is_billboard": "YES",
+      "has_eula": "NO",
+      "eula_url": "",
+      "eula_url_list": [],
+      "is_set_ball": "NO",
+      "match_env": {
+        "condition_home": "CONDITION_RANDOM",
+        "condition_away": "CONDITION_RANDOM",
+        "cpu_level": "REGULAR",
+        "match_time": 0,
+        "injury": "YES",
+        "ball_type": 0,
+        "exTime": "NO",
+        "pk": "NO",
+        "substitution_times": 3,
+        "substitution": 5,
+        "exSubstitution": "NO",
+        "limitTime": "NOSET",
+        "equalization": "NO",
+        "regulation": "NORMAL",
+        "can_use_mobile_controller": "NO"
+      },
+      "stadium_setting": {
+        "stadium_id": 0,
+        "timezone": "TIME_ZONE_TYPE_NIGHT",
+        "weather": "WEATHER_TYPE_FINE",
+        "season": "SEASON_TYPE_SUMMER",
+        "turf_length": "TURF_LENGTH_NORMAL",
+        "pitch_condition": "PITCH_CONDITION_NORMAL"
+      },
+      "compe_unit_id": 65535,
+      "is_limit_matching_area": "NO",
+      "is_limit_control_style": "NO",
+      "is_vsai_force_no_substitute": "YES",
+      "is_vsai_gameplan_disp": "NO",
+      "is_vsai_custom_team": "NO",
+      "vsai_team_id_for_emblem": 0,
+      "banner_file_name": "/banner/event/100004/89c1529a6c9a55511a98ad1a5560509983e6a030c3697741d73a9df30646979a",
+      "announce_banner_file_name": "/banner/event/100004/89c1529a6c9a55511a98ad1a5560509983e6a030c3697741d73a9df30646979a",
+      "detail_banner_file_name": "",
+      "event_menu_banner_file_name": "/banner/event/100004/89c1529a6c9a55511a98ad1a5560509983e6a030c3697741d73a9df30646979a",
+      "text_color_a": {
+        "color_r": 244,
+        "color_g": 255,
+        "color_b": 189
+      },
+      "text_color_b": {
+        "color_r": 255,
+        "color_g": 3,
+        "color_b": 0
+      },
+      "recommend_str": "",
+      "recommend_kind": "NONE",
+      "pt_ranking_start_point": 0,
+      "pt_setting_pattern": "PATTERN_FIX",
+      "pt_theme_bonus": "NONE",
+      "pt_bonus_target_entity_id": [],
+      "pt_reward_list": [],
+      "tour_pvp_sp_rate": 0,
+      "bonus_player_entity_id_list": [],
+      "tour_setting": {
+        "is_daily": "NO",
+        "stage_list": []
+      },
+      "challenge_setting": {
+        "is_clear_level": "NO",
+        "start_match_level": "LEVEL_1",
+        "ch_enable_change_cpu_level": "YES",
+        "minimum_cpu_level": "BEGINNER",
+        "stage_list": [
+          {
+            "match_index": 1,
+            "is_main": "YES",
+            "is_repeat": "NO",
+            "reward": {
+              "reward_count": 1,
+              "event_reward_list": [
+                {
+                  "present_id": 0,
+                  "present_type": "COIN",
+                  "count": 50,
+                  "name": "NotImplement",
+                  "title": "NotImplement",
+                  "reason": "SQUAD_CHALLENGE_EVENT",
+                  "reason_num": 0,
+                  "random_reward_rate": 0
+                }
+              ],
+              "rank_from": 0,
+              "rank_to": 0,
+              "panel_mission_progress_info": []
+            }
+          }
+        ]
+      },
+      "collabo_event_info": []
     }
   ],
-  "event_num": 4,
+  "event_num": 5,
   "sp_rate_list": [
     {
       "player_num": 0,
