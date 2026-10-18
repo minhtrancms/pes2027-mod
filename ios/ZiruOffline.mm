@@ -671,7 +671,7 @@ static void loadOnlineConfig() {
 static NSString* gateCommand(NSURL* url) {
   NSString* last = url.path.lastPathComponent;
   if (![last hasPrefix:@"gate_"] || ![last hasSuffix:@".php"]) return nil;
-  return [last substringWithRange:NSMakeRange(5, last.length - 9)];
+  return [last substringWithRange:NSMakeRange(5, last.length - 9)].uppercaseString;
 }
 
 static BOOL isOnlineCommand(NSString* cmd) {
@@ -692,7 +692,8 @@ static BOOL isOnlineCommand(NSString* cmd) {
                                     @"CMD_GET_GAME_RESULT", @"CMD_CHECK_GAME_RESULT", @"CMD_ALIGN_PROGRESS" ]];
   });
   if (!gOnlineServer || !cmd) return NO;
-  return [always containsObject:cmd] || (gOnlineInRoom && [inRoom containsObject:cmd]);
+  NSString* ucmd = cmd.uppercaseString;
+  return [always containsObject:ucmd] || (gOnlineInRoom && [inRoom containsObject:ucmd]);
 }
 
 @interface ZiruOnlineDelegate : NSObject <NSURLSessionDelegate>
@@ -710,10 +711,16 @@ static BOOL isOnlineCommand(NSString* cmd) {
     if (der) CC_SHA256(der.bytes, (CC_LONG)der.length, digest);
     NSMutableString* fingerprint = [NSMutableString stringWithCapacity:64];
     for (unsigned char b : digest) [fingerprint appendFormat:@"%02x", b];
-    if (der && [fingerprint isEqualToString:gOnlineCertSha256])
+    if (der && [fingerprint isEqualToString:gOnlineCertSha256]) {
+      if (ps.serverTrust && cert) {
+        SecTrustSetAnchorCertificates(ps.serverTrust, (__bridge CFArrayRef)@[ (__bridge id)cert ]);
+        SecTrustSetAnchorCertificatesOnly(ps.serverTrust, false);
+      }
       completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:ps.serverTrust]);
-    else
+    } else {
+      ZLog(@"[ONLINE] TLS certificate fingerprint mismatch: cert=%@ expected=%@", fingerprint, gOnlineCertSha256);
       completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
+    }
     return;
   }
   completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);

@@ -222,6 +222,11 @@ def build_ipa(app, dylib, apk, out, report, bundle_id, display_name, extra_pak=N
     info["LSSupportsOpeningDocumentsInPlace"] = True
     info["CADisableMinimumFrameDurationOnPhone"] = True
     info["CADisableMinimumFrameDuration"] = True
+    info["NSAppTransportSecurity"] = {
+        "NSAllowsArbitraryLoads": True,
+        "NSAllowsArbitraryLoadsInWebContent": True,
+        "NSAllowsLocalNetworking": True,
+    }
     if bundle_id:
         info["CFBundleIdentifier"] = bundle_id
     if display_name:
