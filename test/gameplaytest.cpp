@@ -316,8 +316,28 @@ int main() {
       zs::Prefs prefs(root + "/kill-save/prefs.json");
       check(db.loadMeta("progress", progress) && progress == "retained" && prefs.getString("recruited_players", "") == "[1,2]", "DB and recruits survive exit without destructors");
     }
+    {
+      OfflineServer s(cfg);
+      auto epicNeymar = newObj()->put("initial_booster_id_list", newArr()->put(194)->put(504)->put(0));
+      check(OfflineServer::z27RestorePlayerId(epicNeymar, 40352, 999999LL) == 106788187839904LL, "Epic Neymar restored by booster signature with arbitrary serial");
+
+      auto showtimeNeymar = newObj()->put("initial_booster_id_list", newArr()->put(31)->put(136)->put(0));
+      check(OfflineServer::z27RestorePlayerId(showtimeNeymar, 40352, 888888LL) == 88044145253792LL, "Showtime Neymar restored by booster signature");
+
+      auto santosNeymar = newObj()->put("initial_booster_id_list", newArr()->put(17)->put(0)->put(0));
+      check(OfflineServer::z27RestorePlayerId(santosNeymar, 40352, 777777LL) == 88029918174624LL, "Santos CF Neymar restored by booster signature");
+
+      auto barcaNeymar = newObj()->put("initial_base_team_id", 108)->put("parameters", newArr()->put(9));
+      check(OfflineServer::z27RestorePlayerId(barcaNeymar, 40352, 666666LL) == 89071179308448LL, "Barcelona Neymar restored by team id");
+
+      auto suarez = newObj()->put("initial_base_team_id", 108)->put("uniform_number", 9)->put("parameters", newArr()->put(11));
+      check(OfflineServer::z27RestorePlayerId(suarez, 40352, 111111LL) == 17592454614507LL, "Suarez preserved as Barca #9 CF");
+
+      check(OfflineServer::z27RestorePlayerId(nullptr, 40352, 12345LL) == 88029918174624LL, "Neymar fallback to Santos CF special card");
+      check(OfflineServer::z27RestorePlayerId(nullptr, 106788187839904LL, 123LL) == 106788187839904LL, "Existing 64-bit ID preserved");
+    }
     std::filesystem::remove_all(root);
-    std::cout << "PASS: gameplay, booster layout, all 72 skill mappings/roundtrip/training/skill-zero restart, CREATE_USER resume, D1 migration, failed writes and abrupt-exit persistence\n";
+    std::cout << "PASS: gameplay, booster layout, all 72 skill mappings/roundtrip/training/skill-zero restart, CREATE_USER resume, D1 migration, failed writes, Neymar restoration and abrupt-exit persistence\n";
     return 0;
   } catch (const std::exception& e) { std::cerr << "FAIL: " << e.what() << "\n"; return 1; }
 }

@@ -211,13 +211,9 @@ ObjP refreshZiruGameplayerFromCanonical(const ObjP& jo) {
     if (gid) {
       int64_t id = gid->optLong("id", 0);
       int64_t serial = gid->optLong("serial", 0);
-      if (id == 40352) {
-        if (serial == 359042717000000364LL) id = 106652627934624LL;
-        else if (serial == 359042717000000430LL) id = 105627472928160LL;
-        else if (serial == 359042717000000537LL) id = 88029918174624LL;
-        gid->put("id", (long long)id);
-      } else if (id == 44379) {
-        if (serial == 359042717000000534LL) id = 105639552527707LL;
+      int64_t restored = z27RestorePlayerId(jo, id, serial, 0);
+      if (restored != id) {
+        id = restored;
         gid->put("id", (long long)id);
       }
       if (id > 0) {
@@ -230,10 +226,9 @@ ObjP refreshZiruGameplayerFromCanonical(const ObjP& jo) {
           ObjP g2 = cur->optJSONObject("gameplayer_id");
           if (g2) {
             int64_t g2Id = g2->optLong("id", 0);
-            if (g2Id == 40352 && (id != 40352)) {
-              g2->put("id", (long long)id);
-            } else if (g2Id == 44379 && (id != 44379)) {
-              g2->put("id", (long long)id);
+            int64_t g2Restored = z27RestorePlayerId(cur, g2Id, serial, id);
+            if (g2Restored != g2Id) {
+              g2->put("id", (long long)g2Restored);
             }
           }
           if (!g2 || g2->optLong("id") != id) cur = jo;

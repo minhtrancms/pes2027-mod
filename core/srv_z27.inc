@@ -216,12 +216,11 @@ ObjP z27Squad(int32_t id) {
       if (gid) {
         int64_t pid = gid->optLong("id", 0);
         int64_t serial = gid->optLong("serial", 0);
-        if (pid == 40352) {
-          if (serial == 359042717000000364LL) gid->put("id", 106652627934624LL), pid = 106652627934624LL, mod = true;
-          else if (serial == 359042717000000430LL) gid->put("id", 105627472928160LL), pid = 105627472928160LL, mod = true;
-          else if (serial == 359042717000000537LL) gid->put("id", 88029918174624LL), pid = 88029918174624LL, mod = true;
-        } else if (pid == 44379) {
-          if (serial == 359042717000000534LL) gid->put("id", 105639552527707LL), pid = 105639552527707LL, mod = true;
+        int64_t restored = z27RestorePlayerId(item, pid, serial, 0);
+        if (restored != pid) {
+          gid->put("id", (long long)restored);
+          pid = restored;
+          mod = true;
         }
       }
     }
@@ -502,12 +501,9 @@ void z27Restore(const ObjP& jo) {
           int64_t svPid = sv->getJSONObject("gameplayer_id")->getLong("id");
           if (svPid == pPid || (svPid & 0xFFFFFF) == bid) {
             int64_t svSerial = sv->getJSONObject("gameplayer_id")->optLong("serial", 0);
-            if (svPid == 40352) {
-              if (svSerial == 359042717000000364LL) sv->getJSONObject("gameplayer_id")->put("id", 106652627934624LL);
-              else if (svSerial == 359042717000000430LL) sv->getJSONObject("gameplayer_id")->put("id", 105627472928160LL);
-              else if (svSerial == 359042717000000537LL) sv->getJSONObject("gameplayer_id")->put("id", 88029918174624LL);
-            } else if (svPid == 44379) {
-              if (svSerial == 359042717000000534LL) sv->getJSONObject("gameplayer_id")->put("id", 105639552527707LL);
+            int64_t restored = z27RestorePlayerId(sv, svPid, svSerial, pPid);
+            if (restored != svPid) {
+              sv->getJSONObject("gameplayer_id")->put("id", (long long)restored);
             }
             z27ApplyAppearanceAndClub(sv);
             ObjP w = getZiruPlayerWrapper(Value((long long)sv->getJSONObject("gameplayer_id")->getLong("id")), false);

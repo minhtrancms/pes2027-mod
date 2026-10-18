@@ -58,7 +58,8 @@ set +a
 if [[ ! -f "$CONF/cert.pem" ]]; then
   SAN="DNS:$HOST"
   [[ "$HOST" =~ ^[0-9.]+$ ]] && SAN="IP:$HOST"
-  openssl req -x509 -newkey rsa:2048 -nodes -days 365 -subj "/CN=$HOST" -addext "subjectAltName=$SAN" \
+  openssl req -x509 -newkey rsa:2048 -nodes -days 365 -subj "/CN=$HOST" \
+    -addext "subjectAltName=$SAN" -addext "extendedKeyUsage=serverAuth,clientAuth" \
     -keyout "$CONF/key.pem" -out "$CONF/cert.pem" >/dev/null 2>&1
 fi
 chown root:pes2027 "$CONF/key.pem" "$CONF/cert.pem"

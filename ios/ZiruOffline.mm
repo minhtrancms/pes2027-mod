@@ -725,7 +725,13 @@ static BOOL isOnlineCommand(NSString* cmd) {
       if (ps.serverTrust && cert) {
         SecTrustSetAnchorCertificates(ps.serverTrust, (__bridge CFArrayRef)@[ (__bridge id)cert ]);
         SecTrustSetAnchorCertificatesOnly(ps.serverTrust, true);
+        CFDataRef exceptions = SecTrustCopyExceptions(ps.serverTrust);
+        if (exceptions) {
+          SecTrustSetExceptions(ps.serverTrust, exceptions);
+          CFRelease(exceptions);
+        }
       }
+      ZLog(@"[ONLINE] TLS certificate pinned & trusted for %@", ps.host);
       completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:ps.serverTrust]);
     } else {
       ZLog(@"[ONLINE] TLS certificate fingerprint mismatch: cert=%@ expected=%@", fingerprint, gOnlineCertSha256);

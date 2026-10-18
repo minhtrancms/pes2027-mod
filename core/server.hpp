@@ -152,6 +152,97 @@ class OfflineServer {
   JStr loadSquad(int32_t id) { std::string s; return dbLoad(ziruDb->loadSquad(id, s), s); }
   void saveSquad(int32_t id, const std::string& s) { ziruDb->saveSquad(id, s); }
 
+  static int64_t z27RestorePlayerId(const ObjP& cur, int64_t currentId, int64_t serial = 0, int64_t templatePid = 0) {
+    int32_t bid = (int32_t)(currentId & 0xFFFFFF);
+    if (currentId > 0xFFFFFF) return currentId;
+    if (templatePid > 0xFFFFFF && (templatePid & 0xFFFFFF) == bid) return templatePid;
+
+    if (bid == 40352) {
+      if (serial == 359042717000000364LL || serial == 359042717000000400LL) return 106652627934624LL;
+      if (serial == 359042717000000430LL || serial == 359042717000000450LL) return 105627472928160LL;
+      if (serial == 359042717000000537LL || serial == 359042717000000500LL) return 88029918174624LL;
+
+      if (cur) {
+        ArrP params = cur->optJSONArray("parameters");
+        if (!params) {
+          ObjP gp = cur->optJSONObject("gameplayer");
+          if (gp) params = gp->optJSONArray("parameters");
+        }
+        int h = (params && params->length() > 47) ? params->optInt(47, 0) : 0;
+        int p0 = (params && params->length() > 0) ? params->optInt(0, 0) : 0;
+        int tid = cur->optInt("initial_base_team_id", cur->optInt("team_id", 0));
+        if (!tid) {
+          ObjP gp = cur->optJSONObject("gameplayer");
+          if (gp) tid = gp->optInt("initial_base_team_id", gp->optInt("team_id", 0));
+        }
+        if (h == 180 || (tid == 108 && p0 == 11 && cur->optInt("uniform_number", 0) == 9)) {
+          return 17592454614507LL;
+        }
+
+        ArrP ib = cur->optJSONArray("initial_booster_id_list");
+        if (!ib) {
+          ObjP gp = cur->optJSONObject("gameplayer");
+          if (gp) ib = gp->optJSONArray("initial_booster_id_list");
+        }
+        int b0 = ib ? ib->optInt(0, 0) : 0;
+        int b1 = ib ? ib->optInt(1, 0) : 0;
+
+        if (b0 == 194 && b1 == 504) return 106788187839904LL; // Epic
+        if (b0 == 31 && b1 == 136)  return 88044145253792LL;  // Showtime
+        if (b0 == 17 && b1 == 0)    return 88029918174624LL;  // Santos CF
+        if (b0 == 144 && b1 == 136) return 89133993205152LL;
+        if (b0 == 188 && b1 == 136) return 106770471099808LL;
+        if (b0 == 27 && b1 == 136)  return 88039044980128LL;
+        if (b0 == 170 && b1 == 136) return 106755438714272LL;
+        if (b0 == 20 && b1 == 136)  return 88033139400096LL;
+        if (b0 == 17 && b1 == 136)  return 88032870964640LL;
+        if (b0 == 16 && b1 == 0)    return 88030723480992LL;
+
+        if (tid == 108) return 89071179308448LL;
+        if (tid == 1254) return 88029918174624LL;
+
+        ObjP li = cur->optJSONObject("level_info");
+        if (!li) {
+          ObjP gp = cur->optJSONObject("gameplayer");
+          if (gp) li = gp->optJSONObject("level_info");
+        }
+        int ll = li ? li->optInt("level_limit", 0) : 0;
+        if (ll == 21 || p0 == 11) return 106652627934624LL;
+        if (ll == 19) return 89061784067488LL;
+        if (ll == 34) return 106788187839904LL;
+        if (ll == 36) return 88029918174624LL;
+        if (ll == 31) return 88044145253792LL;
+      }
+      return 88029918174624LL;
+    }
+
+    if (bid == 44379) {
+      if (serial == 359042717000000534LL) return 105639552527707LL;
+      if (cur) {
+        ArrP ib = cur->optJSONArray("initial_booster_id_list");
+        if (!ib) {
+          ObjP gp = cur->optJSONObject("gameplayer");
+          if (gp) ib = gp->optJSONArray("initial_booster_id_list");
+        }
+        int b0 = ib ? ib->optInt(0, 0) : 0;
+        int b1 = ib ? ib->optInt(1, 0) : 0;
+        if (b0 == 186 && b1 == 506) return 106788187843931LL;
+        if (b0 == 26 && b1 == 136)  return 106766981442907LL;
+        if (b0 == 147 && b1 == 136) return 106743090687323LL;
+        ObjP li = cur->optJSONObject("level_info");
+        if (!li) {
+          ObjP gp = cur->optJSONObject("gameplayer");
+          if (gp) li = gp->optJSONObject("level_info");
+        }
+        int ll = li ? li->optInt("level_limit", 0) : 0;
+        if (ll == 28) return 106655312293211LL;
+      }
+      return 106788187843931LL;
+    }
+
+    return currentId;
+  }
+
 #include "srv_myclub.inc"
 #include "srv_league.inc"
 #include "srv_myleague.inc"

@@ -11,16 +11,18 @@ Response handleZiruGetMyclubPlayerData(const std::optional<Bytes>& b) {
     if (b) {
       decodeZiruPlayerDataRequest(*b);
       int64_t j = ziruPlayerDataId;
+      int64_t j2 = ziruPlayerDataSerial;
       ObjP w, gp;
       ArrP params;
       if (j > 0) {
+        int64_t restoredJ = z27RestorePlayerId(nullptr, j, j2, 0);
+        if (restoredJ != j) j = restoredJ;
         w = getZiruPlayerWrapper(Value((long long)j), false);
         if (!w) w = getZiruPlayerWrapperByBaseId((int32_t)(j & 0xFFFFFF));
       }
       if (w && (gp = w->optJSONObject("gameplayer"))) {
         params = gp->optJSONArray("parameters");
       }
-      int64_t j2 = ziruPlayerDataSerial;
       if (!gp && j2 > 0) {
         JStr lp = loadPlayer(j2);
         if (lp && !lp->empty()) {
