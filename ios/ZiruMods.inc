@@ -88,6 +88,8 @@ static NSString* modInventory() {
 @end
 
 @interface ZiruModButtonTarget : NSObject
+- (void)openMods:(UIButton*)button;
+- (void)handlePan:(UIPanGestureRecognizer*)pan;
 @end
 @implementation ZiruModButtonTarget
 - (void)openMods:(UIButton*)button {
@@ -97,10 +99,45 @@ static NSString* modInventory() {
   UINavigationController* nav = [[UINavigationController alloc] initWithRootViewController:[ZiruModVC new]];
   nav.modalPresentationStyle = UIModalPresentationPageSheet; [vc presentViewController:nav animated:YES completion:nil];
 }
+- (void)handlePan:(UIPanGestureRecognizer*)pan {
+  UIView* v = pan.view;
+  if (!v || !v.superview) return;
+  CGPoint trans = [pan translationInView:v.superview];
+  v.center = CGPointMake(v.center.x + trans.x, v.center.y + trans.y);
+  [pan setTranslation:CGPointZero inView:v.superview];
+}
 @end
 static void installModButton(UIWindow* win) {
-  (void)win;
-  // MOD button hidden per user request: mod files are added directly to the game directory
+  if (!win) return;
+  static ZiruModButtonTarget* target; static UIButton* button;
+  if (!target) target = [ZiruModButtonTarget new];
+  if (!button) {
+    button = [UIButton buttonWithType:UIButtonTypeSystem];
+    [button setTitle:@"⚙ MOD" forState:UIControlStateNormal];
+    button.titleLabel.font = [UIFont boldSystemFontOfSize:11];
+    button.backgroundColor = [UIColor colorWithWhite:0.08 alpha:0.75];
+    button.tintColor = PESLime();
+    button.layer.cornerRadius = 14;
+    button.layer.borderWidth = 1.0;
+    button.layer.borderColor = [PESLime() colorWithAlphaComponent:0.45].CGColor;
+    button.layer.masksToBounds = YES;
+    [button addTarget:target action:@selector(openMods:) forControlEvents:UIControlEventTouchUpInside];
+    UIPanGestureRecognizer* pan = [[UIPanGestureRecognizer alloc] initWithTarget:target action:@selector(handlePan:)];
+    [button addGestureRecognizer:pan];
+  }
+  if (button.superview == win) {
+    [win bringSubviewToFront:button];
+    return;
+  }
+  [button removeFromSuperview];
+  button.translatesAutoresizingMaskIntoConstraints = YES;
+  CGSize sz = win.bounds.size;
+  CGFloat w = 64, h = 30;
+  CGFloat x = sz.width > 100 ? (sz.width - w - 16) : 200;
+  CGFloat y = 14;
+  button.frame = CGRectMake(x, y, w, h);
+  [win addSubview:button];
+  [win bringSubviewToFront:button];
 }
 static void showModError(UIWindow* win, NSString* error) {
   UIViewController* vc = win.rootViewController; while (vc.presentedViewController) vc = vc.presentedViewController;
