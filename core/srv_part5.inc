@@ -79,33 +79,7 @@ void z27ApplyAppearanceAndClub(const ObjP& cur) {
     }
   }
 
-  // Fix position proficiencies and minimum rating for Calhanoglu & Mkhitaryan
-  if (base_id == 44379 || base_id == 40352) {
-    if (params && params->length() >= 70) {
-      params->put(5, 2); // DMF full
-      params->put(6, 2); // CMF full
-      params->put(7, 2); // LMF full
-      params->put(8, 2); // RMF full
-      params->put(9, 2); // AMF full
-      if (base_id == 40352) params->put(12, 2); // SS full
-      if (params->optInt(14, 0) < 80) params->put(14, 84);
-    }
-    ArrP origParams = cur->optJSONArray("original_parameters");
-    if (origParams && origParams->length() >= 70) {
-      origParams->put(5, 2);
-      origParams->put(6, 2);
-      origParams->put(7, 2);
-      origParams->put(8, 2);
-      origParams->put(9, 2);
-      if (base_id == 40352) origParams->put(12, 2);
-      if (origParams->optInt(14, 0) < 80) origParams->put(14, 84);
-    }
-    // Normalize ID to base ID so Konami engine loads 44379_.uasset / 40352_.uasset thumbnail
-    if (pid > 0xFFFFFF && cur->optString("type", "NORMAL") == "NORMAL") {
-      gid->put("id", (long long)base_id);
-      pid = base_id;
-    }
-  }
+
 
   // 2. Fix skin tone parameter 49 if 0 (chalk-white albino bug)
   auto restoreAppearance = [&](const ArrP& values) {
@@ -237,6 +211,15 @@ ObjP refreshZiruGameplayerFromCanonical(const ObjP& jo) {
     if (gid) {
       int64_t id = gid->optLong("id", 0);
       int64_t serial = gid->optLong("serial", 0);
+      if (id == 40352) {
+        if (serial == 359042717000000364LL) id = 106652627934624LL;
+        else if (serial == 359042717000000430LL) id = 105627472928160LL;
+        else if (serial == 359042717000000537LL) id = 88029918174624LL;
+        gid->put("id", (long long)id);
+      } else if (id == 44379) {
+        if (serial == 359042717000000534LL) id = 105639552527707LL;
+        gid->put("id", (long long)id);
+      }
       if (id > 0) {
         ObjP cur = jo;
         JStr lp;
@@ -245,6 +228,14 @@ ObjP refreshZiruGameplayerFromCanonical(const ObjP& jo) {
           ObjP gp = cur->optJSONObject("gameplayer");
           if (gp) cur = gp;
           ObjP g2 = cur->optJSONObject("gameplayer_id");
+          if (g2) {
+            int64_t g2Id = g2->optLong("id", 0);
+            if (g2Id == 40352 && (id != 40352)) {
+              g2->put("id", (long long)id);
+            } else if (g2Id == 44379 && (id != 44379)) {
+              g2->put("id", (long long)id);
+            }
+          }
           if (!g2 || g2->optLong("id") != id) cur = jo;
         }
         ObjP w = getZiruPlayerWrapper(Value((long long)id), false);

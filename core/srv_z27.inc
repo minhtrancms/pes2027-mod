@@ -215,10 +215,13 @@ ObjP z27Squad(int32_t id) {
       ObjP gid = item ? item->optJSONObject("gameplayer_id") : nullptr;
       if (gid) {
         int64_t pid = gid->optLong("id", 0);
-        int32_t bid = (int32_t)(pid & 0xFFFFFF);
-        if ((bid == 44379 || bid == 40352) && pid > 0xFFFFFF) {
-          gid->put("id", (long long)bid);
-          mod = true;
+        int64_t serial = gid->optLong("serial", 0);
+        if (pid == 40352) {
+          if (serial == 359042717000000364LL) gid->put("id", 106652627934624LL), pid = 106652627934624LL, mod = true;
+          else if (serial == 359042717000000430LL) gid->put("id", 105627472928160LL), pid = 105627472928160LL, mod = true;
+          else if (serial == 359042717000000537LL) gid->put("id", 88029918174624LL), pid = 88029918174624LL, mod = true;
+        } else if (pid == 44379) {
+          if (serial == 359042717000000534LL) gid->put("id", 105639552527707LL), pid = 105639552527707LL, mod = true;
         }
       }
     }
@@ -498,8 +501,13 @@ void z27Restore(const ObjP& jo) {
           if (sv->optJSONObject("gameplayer")) sv = sv->getJSONObject("gameplayer");
           int64_t svPid = sv->getJSONObject("gameplayer_id")->getLong("id");
           if (svPid == pPid || (svPid & 0xFFFFFF) == bid) {
-            if ((bid == 44379 || bid == 40352) && sv->optString("type", "NORMAL") == "NORMAL") {
-              sv->getJSONObject("gameplayer_id")->put("id", (long long)bid);
+            int64_t svSerial = sv->getJSONObject("gameplayer_id")->optLong("serial", 0);
+            if (svPid == 40352) {
+              if (svSerial == 359042717000000364LL) sv->getJSONObject("gameplayer_id")->put("id", 106652627934624LL);
+              else if (svSerial == 359042717000000430LL) sv->getJSONObject("gameplayer_id")->put("id", 105627472928160LL);
+              else if (svSerial == 359042717000000537LL) sv->getJSONObject("gameplayer_id")->put("id", 88029918174624LL);
+            } else if (svPid == 44379) {
+              if (svSerial == 359042717000000534LL) sv->getJSONObject("gameplayer_id")->put("id", 105639552527707LL);
             }
             z27ApplyAppearanceAndClub(sv);
             ObjP w = getZiruPlayerWrapper(Value((long long)sv->getJSONObject("gameplayer_id")->getLong("id")), false);

@@ -670,15 +670,20 @@ static void loadOnlineConfig() {
 
 static NSString* gateCommand(NSURL* url) {
   NSString* last = url.path.lastPathComponent;
-  if (![last hasPrefix:@"gate_"] || ![last hasSuffix:@".php"]) return nil;
-  return [last substringWithRange:NSMakeRange(5, last.length - 9)].uppercaseString;
+  if ([last.lowercaseString hasSuffix:@".php"]) {
+    last = [last substringToIndex:last.length - 4];
+  }
+  if ([last.lowercaseString hasPrefix:@"gate_"]) {
+    last = [last substringFromIndex:5];
+  }
+  return last.uppercaseString;
 }
 
 static BOOL isOnlineCommand(NSString* cmd) {
-  static NSSet* always, *inRoom;
+  static NSSet* alwaysNorm, *inRoomNorm;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    always = [NSSet setWithArray:@[
+    NSArray* always = @[
       @"CMD_CREATEJOIN_ROOM", @"CMD_JOIN_ROOM", @"CMD_GET_ROOM_INFO", @"CMD_GET_ROOM_LIST", @"CMD_LEAVE_ROOM",
       @"CMD_SET_ROOM_MATCH_READY", @"CMD_UNSET_ROOM_MATCH_READY", @"CMD_SET_ROOM_SETTINGS", @"CMD_SET_ROOM_USER_ENTRY_SIDE",
       @"CMD_SET_ROOM_USER_SQUAD_ENABLE", @"CMD_SET_ROOM_USER_COMMENT", @"CMD_RETURN_ROOM", @"CMD_KICK_ROOM_USER",
@@ -686,14 +691,19 @@ static BOOL isOnlineCommand(NSString* cmd) {
       @"CMD_GET_COMMUNITY_ROOM_LIST", @"CMD_SEND_JOIN_COMMUNITY_ROOM_REQUEST", @"CMD_WATCH_ROOM_CONNECTION",
       @"CMD_GET_TURN_SERVER_LIST", @"CMD_SEND_TURN_ADDRESS_DATA", @"CMD_GET_TURN_ADDRESS_DATA", @"CMD_WATCH_TURN_ADDRESS_DATA",
       @"CMD_GET_GAME_SESSION", @"CMD_GET_SESSION_ID", @"CMD_SEND_SESSION_ID", @"CMD_SET_GAME_SESSION_CHECK_RES",
-      @"CMD_GET_GAME_SESSION_CHECK_RES", @"CMD_SEND_SESSION_FAILED_NOTICE", @"CMD_MATCH_SETTINGS"]];
-    // used by offline matches too: only online while this device is in an online room
-    inRoom = [NSSet setWithArray:@[ @"CMD_CHANGE_GAMEPHASE", @"CMD_ADD_SCORE", @"CMD_ADD_FOUL", @"CMD_SET_GAME_RESULT",
-                                    @"CMD_GET_GAME_RESULT", @"CMD_CHECK_GAME_RESULT", @"CMD_ALIGN_PROGRESS" ]];
+      @"CMD_GET_GAME_SESSION_CHECK_RES", @"CMD_SEND_SESSION_FAILED_NOTICE", @"CMD_MATCH_SETTINGS"];
+    NSArray* inRoom = @[ @"CMD_CHANGE_GAMEPHASE", @"CMD_ADD_SCORE", @"CMD_ADD_FOUL", @"CMD_SET_GAME_RESULT",
+                         @"CMD_GET_GAME_RESULT", @"CMD_CHECK_GAME_RESULT", @"CMD_ALIGN_PROGRESS" ];
+    NSMutableSet* an = [NSMutableSet set];
+    for (NSString* s in always) [an addObject:[s.uppercaseString stringByReplacingOccurrencesOfString:@"_" withString:@""]];
+    alwaysNorm = an;
+    NSMutableSet* irn = [NSMutableSet set];
+    for (NSString* s in inRoom) [irn addObject:[s.uppercaseString stringByReplacingOccurrencesOfString:@"_" withString:@""]];
+    inRoomNorm = irn;
   });
-  if (!gOnlineServer || !cmd) return NO;
-  NSString* ucmd = cmd.uppercaseString;
-  return [always containsObject:ucmd] || (gOnlineInRoom && [inRoom containsObject:ucmd]);
+  if (!gOnlineServer || !cmd.length) return NO;
+  NSString* norm = [cmd.uppercaseString stringByReplacingOccurrencesOfString:@"_" withString:@""];
+  return [alwaysNorm containsObject:norm] || (gOnlineInRoom && [inRoomNorm containsObject:norm]);
 }
 
 @interface ZiruOnlineDelegate : NSObject <NSURLSessionDelegate>
@@ -714,7 +724,7 @@ static BOOL isOnlineCommand(NSString* cmd) {
     if (der && [fingerprint isEqualToString:gOnlineCertSha256]) {
       if (ps.serverTrust && cert) {
         SecTrustSetAnchorCertificates(ps.serverTrust, (__bridge CFArrayRef)@[ (__bridge id)cert ]);
-        SecTrustSetAnchorCertificatesOnly(ps.serverTrust, false);
+        SecTrustSetAnchorCertificatesOnly(ps.serverTrust, true);
       }
       completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:ps.serverTrust]);
     } else {

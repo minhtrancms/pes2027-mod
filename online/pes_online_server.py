@@ -593,7 +593,7 @@ class Handler(BaseHTTPRequestHandler):
         if token and not hmac.compare_digest(self.headers.get("X-Ziru-Token", ""), token):
             return self.reply(403, b"", "text/plain")
         path = urllib.parse.urlparse(self.path).path
-        cmd = path.rsplit("/", 1)[-1].replace("gate_", "").replace(".php", "")
+        cmd = path.rsplit("/", 1)[-1].replace("gate_", "").replace("GATE_", "").replace(".php", "").upper()
         try:
             uid = int(self.headers.get("X-Ziru-Uid") or 0)
         except ValueError:
