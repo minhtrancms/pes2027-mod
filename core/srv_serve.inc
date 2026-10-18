@@ -421,7 +421,7 @@ Response serveInner(Request& r) {
     if (isCmd("CMD_GET_ROOM_INFO")) {
       jo->put("result", "ERR_NOT_IN_ROOM");
     } else {
-      jo->put("result", "ERROR_MAINTENANCE");
+      jo->put("result", "ERR_ROOM_NOT_FOUND");
     }
     jo->put("rqid", rq);
     jo->put("msgid", msgid);

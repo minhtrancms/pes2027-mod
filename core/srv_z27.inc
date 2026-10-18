@@ -34,6 +34,38 @@ Response z27Error(const std::string& msg, const std::exception& e) {
 
 ObjP z27Teams() { return nn(loadZiruJsonAssetObject("responses/ZIRU_MATCH_TEAMS.json"))->getJSONObject("teams"); }
 
+static bool z27ApplyRealClubIdentity(int32_t tid, std::string& name, std::string& shortName) {
+  static const std::unordered_map<int32_t, std::pair<std::string, std::string>> realClubs = {
+    {109, {"Real Madrid", "RMA"}},
+    {173, {"Manchester City", "MCI"}},
+    {103, {"Liverpool FC", "LIV"}},
+    {102, {"Chelsea FC", "CHE"}},
+    {172, {"Atlético de Madrid", "ATM"}},
+    {120, {"Juventus FC", "JUV"}},
+    {124, {"ACF Fiorentina", "FIO"}},
+    {125, {"AS Roma", "ASR"}},
+    {104, {"Tottenham Hotspur", "TOT"}},
+    {105, {"Newcastle United", "NEW"}},
+    {106, {"Aston Villa", "AVL"}},
+    {107, {"West Ham United", "WHU"}},
+    {110, {"Sevilla FC", "SEV"}},
+    {111, {"Real Betis", "BET"}},
+    {112, {"Real Sociedad", "RSO"}},
+    {113, {"Villarreal CF", "VIL"}},
+    {118, {"Napoli", "NAP"}},
+    {126, {"Borussia Dortmund", "BVB"}},
+    {127, {"Bayer 04 Leverkusen", "B04"}},
+    {115, {"AS Monaco", "ASM"}}
+  };
+  auto it = realClubs.find(tid);
+  if (it != realClubs.end()) {
+    name = it->second.first;
+    shortName = it->second.second;
+    return true;
+  }
+  return false;
+}
+
 ObjP z27Team(int32_t id) {
   if (id == 262143) {
     ObjP syn = newObj()
@@ -75,17 +107,28 @@ ObjP z27Team(int32_t id) {
     return syn;
   }
   ObjP copy = z27Copy(t);
-  // Keep the ID/license of the actual supported team. Relabelling a fallback
-  // team, or forcing LICENSED, selects kit/emblem assets that may not exist.
+  std::string rn, rsn;
+  if (z27ApplyRealClubIdentity(copy->optInt("base_team_id", lookup_id), rn, rsn)) {
+    copy->put("team_name", rn);
+    copy->put("team_name_short", rsn);
+  }
   return copy;
 }
 
 ObjP z27Identity(const ObjP& t) {
+  int32_t tid = nn(t)->getInt("base_team_id");
+  std::string name = t->optString("team_name", "PES Team");
+  std::string shortName = t->optString("team_name_short", "PES");
+  std::string rn, rsn;
+  if (z27ApplyRealClubIdentity(tid, rn, rsn)) {
+    name = rn;
+    shortName = rsn;
+  }
   return newObj()
-      ->put("base_team_id", nn(t)->getInt("base_team_id"))
+      ->put("base_team_id", tid)
       ->put("base_team_license", t->optString("base_team_license", "UNKNOWN"))
-      ->put("team_name", t->getString("team_name"))
-      ->put("team_name_short", t->getString("team_name_short"));
+      ->put("team_name", name)
+      ->put("team_name_short", shortName);
 }
 
 inline void z27InjectTrainingItems(const ObjP& entry) {

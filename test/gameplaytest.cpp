@@ -133,7 +133,7 @@ int main() {
     asset(root, "CmdLogin.json", newObj()->put("entry_info", entry));
     asset(root, "CmdCreateUser.json", obj(R"({"user_code":"offline","auth_code":"local","session_id":"create"})"));
     asset(root, "ZIRU_PLAYER_RECORDS.json", newObj()->put("1", newObj()->put("gameplayer", p)));
-    asset(root, "ZIRU_MATCH_TEAMS.json", obj(R"({"teams":{"108":{"base_team_id":108,"team_name":"Test","team_name_short":"TST","kits":[{"id":1,"shirt_rgb":[0,0,0]},{"id":2,"shirt_rgb":[255,255,255]}]}}})"));
+    asset(root, "ZIRU_MATCH_TEAMS.json", obj(R"({"teams":{"108":{"base_team_id":108,"team_name":"Test","team_name_short":"TST","kits":[{"id":1,"shirt_rgb":[0,0,0]},{"id":2,"shirt_rgb":[255,255,255]}]},"109":{"base_team_id":109,"team_name":"Madrid Chamartin B","team_name_short":"MDC","kits":[]},"173":{"base_team_id":173,"team_name":"Manchester B","team_name_short":"MNB","kits":[]}}})"));
     asset(root, "ZIRU_MATCH_PROFILES.json", obj(R"({"profiles":[{"profile_id":1,"player_ids":[1],"coordinates":[],"team_style":0,"base_team_id":108}]})"));
     asset(root, "ZIRU_GET_VSCOM_OPPONENT.json", obj(R"({"squad_data":{"squad_gameplan":{"formation":[],"match_plan_settings":{}}},"user_info":[{}]})"));
     auto start = obj(R"({"squad_data_home":{"coach":{"coach_id":{"id":999,"serial":999}}},"commentary_info":{}})");
@@ -335,6 +335,12 @@ int main() {
 
       check(OfflineServer::z27RestorePlayerId(nullptr, 40352, 12345LL) == 89061784067488LL, "Neymar fallback to standard card");
       check(OfflineServer::z27RestorePlayerId(nullptr, 106788187839904LL, 123LL) == 106788187839904LL, "Existing 64-bit ID preserved");
+
+      auto rma = s.z27Team(109);
+      check(rma->getString("team_name") == "Real Madrid", "Real Madrid identity restored");
+      check(rma->getString("team_name_short") == "RMA", "RMA short code restored");
+      auto mci = s.z27Team(173);
+      check(mci->getString("team_name") == "Manchester City", "Manchester City identity restored");
     }
     std::filesystem::remove_all(root);
     std::cout << "PASS: gameplay, booster layout, all 72 skill mappings/roundtrip/training/skill-zero restart, CREATE_USER resume, D1 migration, failed writes, Neymar restoration and abrupt-exit persistence\n";
