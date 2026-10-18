@@ -90,6 +90,8 @@ static NSString* modInventory() {
 @interface ZiruModButtonTarget : NSObject
 - (void)openMods:(UIButton*)button;
 - (void)handlePan:(UIPanGestureRecognizer*)pan;
+- (void)touchDown:(UIButton*)button;
+- (void)touchUp:(UIButton*)button;
 @end
 @implementation ZiruModButtonTarget
 - (void)openMods:(UIButton*)button {
@@ -99,12 +101,33 @@ static NSString* modInventory() {
   UINavigationController* nav = [[UINavigationController alloc] initWithRootViewController:[ZiruModVC new]];
   nav.modalPresentationStyle = UIModalPresentationPageSheet; [vc presentViewController:nav animated:YES completion:nil];
 }
+- (void)touchDown:(UIButton*)button {
+  [UIView animateWithDuration:0.15 animations:^{ button.alpha = 1.0; }];
+}
+- (void)touchUp:(UIButton*)button {
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    [UIView animateWithDuration:0.3 animations:^{ button.alpha = 0.35; }];
+  });
+}
 - (void)handlePan:(UIPanGestureRecognizer*)pan {
   UIView* v = pan.view;
   if (!v || !v.superview) return;
   CGPoint trans = [pan translationInView:v.superview];
   v.center = CGPointMake(v.center.x + trans.x, v.center.y + trans.y);
   [pan setTranslation:CGPointZero inView:v.superview];
+
+  if (pan.state == UIGestureRecognizerStateBegan) {
+    [UIView animateWithDuration:0.15 animations:^{ v.alpha = 1.0; }];
+  } else if (pan.state == UIGestureRecognizerStateEnded || pan.state == UIGestureRecognizerStateCancelled) {
+    CGRect b = v.superview.bounds;
+    CGFloat midX = CGRectGetMidX(b);
+    CGFloat targetX = (v.center.x < midX) ? (v.bounds.size.width / 2.0 + 6.0) : (b.size.width - v.bounds.size.width / 2.0 - 6.0);
+    CGFloat targetY = MIN(MAX(v.center.y, 30.0), b.size.height - 30.0);
+    [UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+      v.center = CGPointMake(targetX, targetY);
+      v.alpha = 0.35;
+    } completion:nil];
+  }
 }
 @end
 static void installModButton(UIWindow* win) {
@@ -112,18 +135,32 @@ static void installModButton(UIWindow* win) {
   static ZiruModButtonTarget* target; static UIButton* button;
   if (!target) target = [ZiruModButtonTarget new];
   if (!button) {
-    button = [UIButton buttonWithType:UIButtonTypeSystem];
-    [button setTitle:@"⚙ MOD" forState:UIControlStateNormal];
-    button.titleLabel.font = [UIFont boldSystemFontOfSize:11];
-    button.backgroundColor = [UIColor colorWithWhite:0.08 alpha:0.75];
-    button.tintColor = PESLime();
-    button.layer.cornerRadius = 14;
-    button.layer.borderWidth = 1.0;
-    button.layer.borderColor = [PESLime() colorWithAlphaComponent:0.45].CGColor;
+    button = [UIButton buttonWithType:UIButtonTypeCustom];
+    CGFloat w = 46, h = 22;
+    button.frame = CGRectMake(0, 0, w, h);
+    button.backgroundColor = [UIColor colorWithWhite:0.06 alpha:0.65];
+    button.layer.cornerRadius = h / 2.0;
+    button.layer.borderWidth = 0.5;
+    button.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.25].CGColor;
     button.layer.masksToBounds = YES;
+
+    UIBlurEffect* blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+    UIVisualEffectView* blurView = [[UIVisualEffectView alloc] initWithEffect:blur];
+    blurView.frame = button.bounds;
+    blurView.userInteractionEnabled = NO;
+    blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    [button insertSubview:blurView atIndex:0];
+
+    [button setTitle:@"MOD" forState:UIControlStateNormal];
+    button.titleLabel.font = [UIFont systemFontOfSize:9.5 weight:UIFontWeightHeavy];
+    [button setTitleColor:[UIColor colorWithWhite:0.95 alpha:0.9] forState:UIControlStateNormal];
+
+    [button addTarget:target action:@selector(touchDown:) forControlEvents:UIControlEventTouchDown];
+    [button addTarget:target action:@selector(touchUp:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside];
     [button addTarget:target action:@selector(openMods:) forControlEvents:UIControlEventTouchUpInside];
     UIPanGestureRecognizer* pan = [[UIPanGestureRecognizer alloc] initWithTarget:target action:@selector(handlePan:)];
     [button addGestureRecognizer:pan];
+    button.alpha = 0.35;
   }
   if (button.superview == win) {
     [win bringSubviewToFront:button];
@@ -132,9 +169,9 @@ static void installModButton(UIWindow* win) {
   [button removeFromSuperview];
   button.translatesAutoresizingMaskIntoConstraints = YES;
   CGSize sz = win.bounds.size;
-  CGFloat w = 64, h = 30;
-  CGFloat x = sz.width > 100 ? (sz.width - w - 16) : 200;
-  CGFloat y = 14;
+  CGFloat w = 46, h = 22;
+  CGFloat x = sz.width > 80 ? (sz.width - w - 8) : 150;
+  CGFloat y = 10;
   button.frame = CGRectMake(x, y, w, h);
   [win addSubview:button];
   [win bringSubviewToFront:button];

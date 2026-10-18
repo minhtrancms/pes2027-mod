@@ -8,7 +8,7 @@
       "is_ranking_fix": "NO",
       "pt_event_point": 0,
       "pt_cleared_point": 0,
-      "pt_selected_com_lv": "LEGEND",
+      "pt_selected_com_lv": "REGULAR",
       "pt_rest_point": 0,
       "pt_next_reward": [],
       "pt_is_next_reward_dialog": "NO",
@@ -128,7 +128,7 @@
       "match_env": {
         "condition_home": "CONDITION_RANDOM",
         "condition_away": "CONDITION_RANDOM",
-        "cpu_level": "LEGEND",
+        "cpu_level": "REGULAR",
         "match_time": 0,
         "injury": "YES",
         "ball_type": 0,
@@ -183,9 +183,9 @@
       "ch_event_type": "NONE",
       "ch_mission_info_list": [],
       "ch_clear_count_limit": 0,
-      "ch_enable_change_cpu_level": "NO",
+      "ch_enable_change_cpu_level": "YES",
       "ch_is_ftue": "NO",
-      "ch_is_challenge_unlocked": "NO",
+      "ch_is_challenge_unlocked": "YES",
       "sp_regulation": {
         "type": "NORMAL",
         "value": 0
@@ -202,7 +202,7 @@
       "useable_compe_list": [],
       "squad_challenge_event_info": {
         "match_num": 3,
-        "minimum_cpu_level": "TOP_PLAYER",
+        "minimum_cpu_level": "BEGINNER",
         "reward_list": [
           {
             "match_index": 1,
