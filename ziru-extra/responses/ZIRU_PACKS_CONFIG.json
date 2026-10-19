@@ -9,13 +9,13 @@
     {
       "agent_id": 1368,
       "pack_id": "epic_1",
-      "title": "ZIRU LEGENDS: FOOTBALL ROYALTY",
+      "title": "ZIRU LEGENDS: RONALDO R9 & ZIDANE",
       "category": "epic",
       "base_count": 148,
       "player_ids": [
-        40291,
         37576,
         9901397,
+        40291,
         88045755964133,
         88045755960841,
         89131308848867,
@@ -330,8 +330,8 @@
       "category": "epic",
       "base_count": 145,
       "player_ids": [
-        40291,
         37576,
+        40291,
         9901397,
         88029649836778,
         88040387251713,
