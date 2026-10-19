@@ -23,6 +23,7 @@
 #include "jvalue.hpp"
 #include "store.hpp"
 #include "ios_compat.hpp"
+#include "jersey_registry.hpp"
 
 namespace zsv {
 using namespace zj;
@@ -245,6 +246,120 @@ class OfflineServer {
     }
 
     return currentId;
+  }
+
+  void z27MaxAiPlayerStats(const ObjP& p) {
+    if (!p) return;
+    int lim = 30;
+    ObjP li = p->optJSONObject("level_info");
+    if (li) {
+      lim = std::max(li->optInt("level_limit", 30), 20);
+      li->put("level_limit", lim);
+      li->put("level", lim);
+      li->put("exp_total", 0);
+      li->put("exp_current_level", 0);
+      li->put("exp_to_next_level", 0);
+      li->put("customize_point", 0);
+    }
+    ArrP params = p->optJSONArray("parameters");
+    if (params && params->length() >= 41) {
+      int pos = params->optInt(0, 0);
+      float scale = (float)lim / 30.0f;
+      int d[45] = {0};
+
+      if (pos == 1) { // GK
+        d[29] = (int)std::round(11 * scale); // GK Awareness
+        d[30] = (int)std::round(11 * scale); // GK Catching
+        d[31] = (int)std::round(11 * scale); // GK Clearing
+        d[32] = (int)std::round(12 * scale); // GK Reflexes
+        d[38] = (int)std::round(10 * scale); // Jump
+        d[39] = (int)std::round(10 * scale); // Reach
+        d[40] = (int)std::round(6 * scale);  // Stamina
+      } else if (pos == 2) { // CB
+        d[15] = (int)std::round(12 * scale); // Def Awareness
+        d[23] = (int)std::round(9 * scale);  // Heading
+        d[24] = (int)std::round(12 * scale); // Tackling
+        d[25] = (int)std::round(11 * scale); // Aggression
+        d[26] = (int)std::round(12 * scale); // Def Engagement
+        d[34] = (int)std::round(7 * scale);  // Speed
+        d[35] = (int)std::round(6 * scale);  // Accel
+        d[38] = (int)std::round(10 * scale); // Jump
+        d[39] = (int)std::round(11 * scale); // Phys Contact
+        d[40] = (int)std::round(8 * scale);  // Stamina
+      } else if (pos == 3 || pos == 4) { // LB / RB
+        d[15] = (int)std::round(8 * scale);  // Def Awareness
+        d[17] = (int)std::round(7 * scale);  // Ball Control
+        d[18] = (int)std::round(7 * scale);  // Dribbling
+        d[21] = (int)std::round(8 * scale);  // Low Pass
+        d[22] = (int)std::round(8 * scale);  // Lofted Pass
+        d[24] = (int)std::round(9 * scale);  // Tackling
+        d[25] = (int)std::round(9 * scale);  // Aggression
+        d[26] = (int)std::round(9 * scale);  // Def Engagement
+        d[34] = (int)std::round(11 * scale); // Speed
+        d[35] = (int)std::round(11 * scale); // Accel
+        d[36] = (int)std::round(8 * scale);  // Balance
+        d[40] = (int)std::round(11 * scale); // Stamina
+      } else if (pos == 5) { // DMF
+        d[15] = (int)std::round(11 * scale); // Def Awareness
+        d[17] = (int)std::round(8 * scale);  // Ball Control
+        d[18] = (int)std::round(7 * scale);  // Dribbling
+        d[21] = (int)std::round(9 * scale);  // Low Pass
+        d[22] = (int)std::round(8 * scale);  // Lofted Pass
+        d[24] = (int)std::round(11 * scale); // Tackling
+        d[25] = (int)std::round(11 * scale); // Aggression
+        d[26] = (int)std::round(11 * scale); // Def Engagement
+        d[34] = (int)std::round(7 * scale);  // Speed
+        d[35] = (int)std::round(7 * scale);  // Accel
+        d[37] = (int)std::round(8 * scale);  // Kick Power
+        d[39] = (int)std::round(9 * scale);  // Phys Contact
+        d[40] = (int)std::round(11 * scale); // Stamina
+      } else if (pos >= 6 && pos <= 9) { // CMF / LMF / RMF / AMF
+        d[14] = (int)std::round(8 * scale);  // Off Awareness
+        d[17] = (int)std::round(10 * scale); // Ball Control
+        d[18] = (int)std::round(10 * scale); // Dribbling
+        d[19] = (int)std::round(10 * scale); // Tight Poss
+        d[20] = (int)std::round(7 * scale);  // Finishing
+        d[21] = (int)std::round(11 * scale); // Low Pass
+        d[22] = (int)std::round(10 * scale); // Lofted Pass
+        d[27] = (int)std::round(7 * scale);  // Place Kicking
+        d[28] = (int)std::round(7 * scale);  // Curl
+        d[34] = (int)std::round(8 * scale);  // Speed
+        d[35] = (int)std::round(8 * scale);  // Accel
+        d[36] = (int)std::round(9 * scale);  // Balance
+        d[37] = (int)std::round(8 * scale);  // Kick Power
+        d[40] = (int)std::round(10 * scale); // Stamina
+        if (pos == 6) { // CMF gets more defending
+          d[15] = (int)std::round(7 * scale);
+          d[24] = (int)std::round(7 * scale);
+          d[25] = (int)std::round(7 * scale);
+          d[26] = (int)std::round(7 * scale);
+        }
+      } else { // CF / SS / LWG / RWG (pos 10..13 or default)
+        d[14] = (int)std::round(11 * scale); // Off Awareness
+        d[17] = (int)std::round(9 * scale);  // Ball Control
+        d[18] = (int)std::round(9 * scale);  // Dribbling
+        d[19] = (int)std::round(9 * scale);  // Tight Poss
+        d[20] = (int)std::round(12 * scale); // Finishing
+        d[21] = (int)std::round(6 * scale);  // Low Pass
+        d[23] = (int)std::round(7 * scale);  // Heading
+        d[27] = (int)std::round(6 * scale);  // Place Kicking
+        d[28] = (int)std::round(6 * scale);  // Curl
+        d[34] = (int)std::round(10 * scale); // Speed
+        d[35] = (int)std::round(10 * scale); // Accel
+        d[36] = (int)std::round(9 * scale);  // Balance
+        d[37] = (int)std::round(10 * scale); // Kick Power
+        d[38] = (int)std::round(7 * scale);  // Jump
+        d[39] = (int)std::round(7 * scale);  // Phys Contact
+        d[40] = (int)std::round(8 * scale);  // Stamina
+      }
+
+      for (int k = 14; k <= 40; k++) {
+        if (k == 33) continue; // Weak Foot Accuracy preserved
+        int cur = params->optInt(k, 70);
+        int val = std::min(99, cur + d[k]);
+        params->put(k, val);
+      }
+    }
   }
 
 #include "srv_myclub.inc"

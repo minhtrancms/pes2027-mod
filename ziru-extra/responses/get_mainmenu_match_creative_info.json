@@ -26,6 +26,15 @@
       "event_recommend_kind": "NONE",
       "event_recommend_str": "",
       "event_recommend_info_type": "BOTH"
+    },
+    {
+      "event_banner": "/banner/event/090005/c5f0ef42ab3559df093fbfb36441eb4383676c128081394f58d73a9e035fc404",
+      "event_match_label": "DREAM",
+      "event_info_type": "AI_MATCH",
+      "event_end_time": 1893455999,
+      "event_recommend_kind": "NONE",
+      "event_recommend_str": "",
+      "event_recommend_info_type": "BOTH"
     }
   ],
   "league_division_info": {

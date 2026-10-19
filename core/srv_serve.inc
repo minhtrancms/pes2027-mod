@@ -227,7 +227,7 @@ static const char* routeAsset(const std::string& uri) {
       {"PROCURABLE", "CmdGetMyclubProcurableGameplayerlist.json"}, {"RESET_MYCLUB_AGENT", "CmdResetMyclubAgent.json"},
       {"USE_MYCLUB_AGENT", "CmdUseMyclubAgent.json"}, {"USE_MYCLUB_ITEM", "CMD_USE_MYCLUB_ITEM.json"},
       {"SET_MYCLUB_SQUAD_INFO", "CMD_SET_MYCLUB_SQUAD_INFO.json"},
-      {"VSCOM", "get_myclub_vscom_opponent.json"}, {"RECOVER_ENERGY", "CmdRecoverEnergy.json"}, {"DOWNLOAD_STATS", "CmdSendDownloadStatsData.json"},
+      {"RECOVER_ENERGY", "CmdRecoverEnergy.json"}, {"DOWNLOAD_STATS", "CmdSendDownloadStatsData.json"},
       {"HEARTBEAT", "CmdSendHeartbeat.json"}, {"MATCH_TEAM", "CmdSendMatchTeamInfo.json"}, {"PLAYLOG", "CmdSendPlaylog.json"},
       {"DEVICETOKEN", "CmdSetDevicetoken.json"}, {"MATCH_RESULT", "CmdSetMatchResult.json"}, {"LANGUAGE", "CmdSetMyclubLanguage.json"},
       {"LOCK_GAMEPLAYER", "CmdSetMyclubLockGameplayer.json"}, {"MAIN_SQUAD", "CmdSetMyclubMainSquad.json"},
@@ -256,6 +256,19 @@ Response serveInner(Request& r) {
   auto isCmd = [&](const char* c) {
     return contains(norm, toUpperUS(replaceAll(c, "_", "")));
   };
+  if (ziruLastRequestBody) {
+    ObjP anyReq = decodeZiruRequestJson(ziruLastRequestBody);
+    if (anyReq) {
+      int ev = anyReq->optInt("event_id", 0);
+      if (ev > 0 && ev != 100004) {
+        z27PutMeta("z27_active_event_id", str(ev));
+        zs::logi("OFFLINE_SERVER", "[EVENT_TRACK] Detected event_id=" + str(ev));
+      }
+    }
+  }
+  if (isCmd("CMD_SET_EVENT_LEAVE") || isCmd("CMD_IS_FIRST_LEAGUE") || isCmd("CMD_GET_LEAGUE_COM_INFO")) {
+    z27PutMeta("z27_active_event_id", "0");
+  }
   if (startsWith(uri, "/livedata/")) return serveLivedataAsset(uri.substr(1));
   if (isCmd("CMD_SELL_MYCLUB_GAMEPLAYER")) {
     auto x = handleZiruSellPlayerEarly(r);
@@ -404,6 +417,23 @@ Response serveInner(Request& r) {
     jo->put("rqid", rq);
     jo->put("msgid", "CMD_GET_EVENT_LIST_AND_LOG");
     return serveObjectAsEncryptedMsgPack(jo);
+  }
+  if (isCmd("CMD_SET_EVENT_ENTER") || isCmd("CMD_ENTER_EVENT_COMPE") || isCmd("CMD_GET_EVENT_COMPE_INFO")) {
+    ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
+    int evId = req ? req->optInt("event_id", 0) : 0;
+    if (evId > 0 && evId != 100004) {
+      z27PutMeta("z27_active_event_id", str(evId));
+      zs::logi("OFFLINE_SERVER", "Active Event ID set: " + str(evId));
+    }
+    ziruMyLeagueSetActive(0);
+    std::string cmdName = isCmd("CMD_ENTER_EVENT_COMPE") ? "CMD_ENTER_EVENT_COMPE" :
+                          isCmd("CMD_GET_EVENT_COMPE_INFO") ? "CMD_GET_EVENT_COMPE_INFO" : "CMD_SET_EVENT_ENTER";
+    return handleZiruStartupAck(cmdName);
+  }
+  if (isCmd("CMD_SET_EVENT_LEAVE")) {
+    z27PutMeta("z27_active_event_id", "0");
+    zs::logi("OFFLINE_SERVER", "Active Event ID cleared (LEAVE)");
+    return handleZiruStartupAck("CMD_SET_EVENT_LEAVE");
   }
   if (isCmd("CMD_CREATEJOIN_ROOM") || isCmd("CMD_JOIN_ROOM") ||
       isCmd("CMD_GET_ROOM_LIST") || isCmd("CMD_GET_ROOM_INFO") ||
@@ -602,7 +632,8 @@ Response serveInner(Request& r) {
   if (isCmd("CMD_GET_GAMERESULT_LIST")) return handleZiruLeagueHistoryDynamic();
   if (isCmd("CMD_CHECK_MATCH_ENABLE"))
     return ziruMyLeagueIsActive() ? handleZiruLeagueStatic("responses/ZIRU_ML_CHECK_MATCH_ENABLE.json") : handleZiruLeagueStatic("responses/ZIRU_CHECK_MATCH_ENABLE.json");
-  if (isCmd("CMD_GET_VSCOM_OPPONENT")) return ziruMyLeagueIsActive() ? handleZiruMyLeagueOpponentV72() : handleZiruLeagueOpponentDynamicV75();
+  if (isCmd("CMD_GET_VSCOM_OPPONENT") || isCmd("CMD_GET_MYCLUB_VSCOM_OPPONENT") || contains(norm, "VSCOMOPPONENT") || contains(norm, "MYCLUBVSCOM"))
+    return ziruMyLeagueIsActive() ? handleZiruMyLeagueOpponentV72() : handleZiruLeagueOpponentDynamicV75();
   if (isCmd("CMD_START_GAME")) return ziruMyLeagueIsActive() ? handleZiruMyLeagueStartGameV71() : handleZiruLeagueStartGameDynamic();
   if (isCmd("CMD_GET_VSCOM_GAME_RESULT")) return ziruMyLeagueIsActive() ? handleZiruMyLeagueResultV71() : handleZiruLeagueResult();
   if (isCmd("CMD_GET_SUGOROKU")) {

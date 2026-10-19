@@ -311,7 +311,7 @@ Response handleZiruMyLeagueOpponentV72() {
     patchZiruMyLeagueCommonState(jo);
     patchZiruMyLeagueOpponentV82(jo);
     JStr lv = loadMeta("ziru_myleague_cpu_level");
-    std::string level = lv ? *lv : std::string("HARDEST");
+    std::string level = lv ? *lv : std::string("LEGEND");
     ObjP req = decodeZiruRequestJson(ziruLastRequestBody);
     if (req) {
       std::string s = req->optString("cpu_level", "");
@@ -319,6 +319,12 @@ Response handleZiruMyLeagueOpponentV72() {
       nn(jo)->put("rqid", (long long)req->optLong("rqid", 1));
     }
     nn(jo)->put("cpu_level", level);
+    ArrP pls = nn(jo)->optJSONArray("player_list");
+    if (pls) {
+      for (int i = 0; i < pls->length(); i++) {
+        z27MaxAiPlayerStats(pls->getJSONObject(i));
+      }
+    }
     return serveObjectAsEncryptedMsgPack(jo);
   } catch (const std::exception& e) {
     zs::loge("OFFLINE_SERVER", std::string("[ZIRU_V72_ML_CPU_ERR] ") + e.what());

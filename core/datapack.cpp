@@ -267,6 +267,10 @@ bool activate(const Layout& L, const std::string& id, std::string& err) {
   std::string dir = dataDir(L, id);
   if (!relink(L.documents + "/pak", dir + "/pak", err)) return false;
   if (!relink(L.documents + "/cpk", dir + "/cpk", err)) return false;
+  struct stat st;
+  if (stat((dir + "/livedata").c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
+    relink(L.documents + "/livedata", dir + "/livedata", err);
+  }
   if (!linkDownloads(L, id, err)) return false;
   std::string a = "{\"data_id\":" + zj::quote(id) + "}";
   if (!writeFile(L.gameDataRoot + "/active.json", a)) { err = "Không ghi được active.json"; return false; }

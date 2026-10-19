@@ -10,3 +10,8 @@ __pycache__/
 .hash-cache.json
 client.json
 PES2027-online.json
+.venv/
+.DS_Store
+*.rar
+PES2027-data/
+ziru-extra/pak_extra/pc3700*

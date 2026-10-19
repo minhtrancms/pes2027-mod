@@ -4,13 +4,16 @@ emblems for unlicensed clubs: Real Madrid, Man City, Chelsea, Liverpool, Juventu
 Atlético de Madrid, Tottenham, Newcastle, Aston Villa, West Ham, Sevilla, Fiorentina, Roma.
 """
 import glob, hashlib, json, os, struct, subprocess, sys, urllib.request, zlib
-import tools.make_extra_pak as p
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+import tools.make_extra_pak as p
 NAME = "pc8000_mobile_ios"
 BLOCK = 65536
-PC1000_PATH = "/Users/nhatminh/Desktop/PES2027-data/pak/pc1000_mobile_ios.utoc"
-OUT_DIR = "build/staging/Payload/PESmobile.app/ziru/pak_extra"
-PNG2BGRA = "./build/png2bgra"
+PC1000_PATH = os.path.join(REPO_ROOT, "PES2027-data", "pak", "pc1000_mobile_ios.utoc")
+OUT_DIR = os.path.join(REPO_ROOT, "ziru-extra", "pak_extra")
+PNG2BGRA = os.path.join(REPO_ROOT, "build", "png2bgra")
 
 CLUBS = {
     109: ("Real Madrid", 8633),
@@ -26,6 +29,20 @@ CLUBS = {
     110: ("Sevilla FC", 8302),
     124: ("ACF Fiorentina", 8535),
     125: ("AS Roma", 8686),
+    127: ("FC Bayern München", 9823),
+    177: ("Everton FC", 8668),
+    178: ("Fulham FC", 9879),
+    377: ("Brighton & Hove Albion", 10204),
+    4180: ("Brentford FC", 9937),
+    382: ("Crystal Palace", 9826),
+    389: ("Nottingham Forest", 10203),
+    208: ("Wolverhampton Wanderers", 8659),
+    4071: ("AFC Bournemouth", 8678),
+    258: ("Athletic Club Bilbao", 8315),
+    2187: ("Girona FC", 7732),
+    111: ("Real Betis", 8603),
+    112: ("Real Sociedad", 8560),
+    113: ("Villarreal CF", 10205),
 }
 
 VARIANTS = [
@@ -154,8 +171,11 @@ def main():
 
     # Empty companion pak
     pak_path = os.path.join(OUT_DIR, NAME + ".pak")
+    companion_src = os.path.join(REPO_ROOT, "PES2027-data", "pak", "pc1000_mobile_ios.pak")
+    if not os.path.exists(companion_src):
+        companion_src = os.path.join(REPO_ROOT, "ziru-extra", "pak_extra", "pc8000_mobile_ios.pak")
     with open(pak_path, "wb") as f:
-        f.write(open("build/staging/Payload/PESmobile.app/ziru/pak_extra/pc7999_mobile_ios.pak", "rb").read())
+        f.write(open(companion_src, "rb").read())
 
     # Self-test: read every package back
     check_toc = p.Toc(utoc_path)
@@ -166,15 +186,6 @@ def main():
     print(f"  Files: {len(paths)} packages")
     print(f"  UCAS: {os.path.getsize(ucas_path) / 1024:.1f} KB")
     print(f"  UTOC: {os.path.getsize(utoc_path) / 1024:.1f} KB")
-
-    # Also copy to ziru-extra/pak_extra
-    dest = "ziru-extra/pak_extra"
-    os.makedirs(dest, exist_ok=True)
-    import shutil
-    shutil.copy(ucas_path, os.path.join(dest, NAME + ".ucas"))
-    shutil.copy(utoc_path, os.path.join(dest, NAME + ".utoc"))
-    shutil.copy(pak_path, os.path.join(dest, NAME + ".pak"))
-    print(f"Copied {NAME} to {dest}")
 
 if __name__ == "__main__":
     main()

@@ -248,7 +248,7 @@ int main() {
       s.ziruDb->saveMeta("z27_active_match", active->toString());
       check(sqlite3_exec(s.ziruDb->db, "DELETE FROM meta WHERE k='z27_div10_reset_v3'", nullptr, nullptr, nullptr) == SQLITE_OK, "prepare legacy save");
       check(s.z27State()->getInt("division") == 10, "legacy rank migrates to D10");
-      auto selected = call(s, "CMD_GET_VSCOM_OPPONENT");
+      printf("ACTIVE BEFORE: %s\n", s.z27Meta("z27_active_match")->toString().c_str()); auto selected = call(s, "CMD_GET_VSCOM_OPPONENT"); printf("SELECTED: %s\n", selected->toString().c_str());
       check(selected->getString("cpu_level") == "NORMAL" && s.z27Active()->getInt("division") == 10, "cached opponent migrates with D10");
       active = s.z27Meta("z27_active_match");
       active->put("division", 10)->put("cpu_level", "NORMAL");

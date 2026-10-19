@@ -54,8 +54,23 @@ static bool z27ApplyRealClubIdentity(int32_t tid, std::string& name, std::string
     {113, {"Villarreal CF", "VIL"}},
     {118, {"Napoli", "NAP"}},
     {126, {"Borussia Dortmund", "BVB"}},
-    {127, {"Bayer 04 Leverkusen", "B04"}},
-    {115, {"AS Monaco", "ASM"}}
+    {127, {"FC Bayern München", "BAY"}},
+    {128, {"Bayer 04 Leverkusen", "B04"}},
+    {115, {"AS Monaco", "ASM"}},
+    {177, {"Everton FC", "EVE"}},
+    {178, {"Fulham FC", "FUL"}},
+    {186, {"Bologna FC 1909", "BOL"}},
+    {204, {"Leicester City", "LEI"}},
+    {207, {"Southampton FC", "SOU"}},
+    {208, {"Wolverhampton Wanderers", "WOL"}},
+    {258, {"Athletic Club Bilbao", "ATH"}},
+    {377, {"Brighton & Hove Albion", "BHA"}},
+    {382, {"Crystal Palace", "CRY"}},
+    {389, {"Nottingham Forest", "NFO"}},
+    {4071, {"AFC Bournemouth", "BOU"}},
+    {4180, {"Brentford FC", "BRE"}},
+    {2187, {"Girona FC", "GIR"}},
+    {5010, {"RB Leipzig", "RBL"}}
   };
   auto it = realClubs.find(tid);
   if (it != realClubs.end()) {
@@ -276,6 +291,22 @@ ObjP z27Squad(int32_t id) {
     }
     if (mod && s) {
       ziruDb->saveSquad(id, res->toString());
+    }
+    int homeTid = 0;
+    try {
+      ObjP hb = z27Base(id);
+      if (hb) homeTid = hb->optInt("base_team_id", 0);
+    } catch (...) {}
+    for (int i = 0; i < pl->length(); i++) {
+      ObjP item = pl->optJSONObject(i);
+      ObjP gid = item ? item->optJSONObject("gameplayer_id") : nullptr;
+      if (gid) {
+        int64_t pid = gid->optLong("id", 0);
+        int uni = item->optInt("uniform_number", i + 1);
+        if (pid > 0 && uni > 0) {
+          zjersey::registerMatchPlayer(0, homeTid, uni, pid);
+        }
+      }
     }
   }
   return res;
@@ -670,7 +701,11 @@ ObjP z27Active() {
   if (!state->getJSONObject("completed")->has(str(m->getLong("game_id")))) {
     m->put("division", state->getInt("division"));
   }
-  m->put("cpu_level", z27Difficulty(m->getInt("division")));
+  std::string cpu = m->optString("cpu_level", "");
+  if (m->optLong("event_id", 0) == 90004 || cpu.empty()) {
+    cpu = "LEGEND";
+  }
+  m->put("cpu_level", cpu);
   z27PutMeta("z27_active_match", m->toString());
   return m;
 }
@@ -682,6 +717,7 @@ ObjP z27Opponent(const ObjP& active) {
   ArrP players = newArr(), refs = newArr();
   for (int i = 0; i < ids->length(); i++) {
     ObjP w = getZiruPlayerWrapper(Value((long long)ids->getLong(i)), false);
+    if (!w) w = getZiruPlayerWrapperByBaseId((int32_t)(ids->getLong(i) & 0xFFFFFF));
     if (!w) throw IllegalState("Missing pack ID " + str(ids->getLong(i)));
     ObjP gp = z27Copy(w->getJSONObject("gameplayer"));
     ObjP gid = newObj()->put("id", (long long)ids->getLong(i))->put("serial", (long long)(800000000000000LL + (int64_t)(prof->getInt("profile_id") * 100) + i));
@@ -737,13 +773,7 @@ ObjP z27Opponent(const ObjP& active) {
   sd->put("player_list", refs);
   for (int i = 0; i < players->length(); i++) {
     ObjP p = players->getJSONObject(i);
-    ObjP li = p->optJSONObject("level_info");
-    if (li) {
-      int lim = li->optInt("level_limit", li->optInt("level", 1));
-      li->put("level", lim);
-      li->put("exp_current_level", 0);
-      li->put("exp_to_next_level", 0);
-    }
+    z27MaxAiPlayerStats(p);
   }
   tpl->put("player_list", players)
       ->put("team_data", z27Copy(active->getJSONObject("away")))
@@ -758,12 +788,29 @@ Response z27SelectOpponent() {
   try {
     ObjP req = z27Request();
     ObjP st = z27State();
+    int32_t activeEventId = req ? req->optInt("event_id", 0) : 0;
+    if (activeEventId <= 0) activeEventId = z27Int("z27_active_event_id", 0);
+
+    ObjP m = z27Meta("z27_active_match");
+    if (m) {
+      int64_t mEventId = m->optLong("event_id", 0);
+      bool isCompleted = st->getJSONObject("completed")->has(str(m->getLong("game_id")));
+      if (!isCompleted && mEventId != activeEventId) {
+        m = nullptr;
+      }
+    }
+
     std::string userCpu = req ? req->optString("cpu_level", "") : "";
     std::string effectiveCpu = z27Difficulty(st->getInt("division"));
-    if (!userCpu.empty() && (userCpu == "VERYEASY" || userCpu == "EASY" || userCpu == "NORMAL" || userCpu == "HARD" || userCpu == "VERYHARD" || userCpu == "HARDEST" || userCpu == "LEGEND")) {
+    if (activeEventId == 90004) {
+      // Legend All-Stars is strictly locked to LEGEND difficulty
+      effectiveCpu = "LEGEND";
+    } else if (!userCpu.empty() && (userCpu == "VERYEASY" || userCpu == "EASY" || userCpu == "NORMAL" || userCpu == "HARD" || userCpu == "VERYHARD" || userCpu == "HARDEST" || userCpu == "LEGEND")) {
       effectiveCpu = userCpu;
+    } else if (m && m->has("cpu_level") && activeEventId <= 0) {
+      effectiveCpu = m->getString("cpu_level");
     }
-    ObjP m = z27Meta("z27_active_match");
+
     if (m) {
       if (!st->getJSONObject("completed")->has(str(m->getLong("game_id")))) m->put("division", st->getInt("division"));
       m->put("cpu_level", effectiveCpu);
@@ -771,7 +818,88 @@ Response z27SelectOpponent() {
     }
     if (!m || st->getJSONObject("completed")->has(str(m->getLong("game_id")))) {
       ArrP profs = nn(loadZiruJsonAssetObject("responses/ZIRU_MATCH_PROFILES.json"))->getJSONArray("profiles");
-      ObjP prof = profs->getJSONObject(st->getInt("sequence") % profs->length());
+      std::vector<ObjP> pool;
+
+      int userBaseTeam = 0;
+      try {
+        ObjP hb = z27Base(z27Main());
+        if (hb) userBaseTeam = hb->optInt("base_team_id", 0);
+      } catch (...) {}
+
+      if (activeEventId == 90003) {
+        // FIFA World Cup: National Teams ONLY (deduplicated by nation)
+        static const std::set<int32_t> kWorldCupNations = {
+          5, 6, 7, 8, 9, 10, 12, 14, 16, 19, 24, 29, 45, 49, 50, 51, 52
+        };
+        std::set<int32_t> seen;
+        for (int i = 0; i < profs->length(); i++) {
+          ObjP p = profs->getJSONObject(i);
+          if (!p) continue;
+          int tid = p->optInt("base_team_id", 0);
+          if (kWorldCupNations.count(tid) && !seen.count(tid)) {
+            if (userBaseTeam > 0 && tid == userBaseTeam) continue;
+            seen.insert(tid);
+            pool.push_back(p);
+          }
+        }
+      } else if (activeEventId == 90002) {
+        // UEFA Champions League (C1): European C1 clubs ONLY
+        static const std::set<int32_t> kC1Clubs = {
+          100, 108, 109, 114, 116, 117, 118, 119, 121, 122, 123, 126, 128
+        };
+        std::set<int32_t> seen;
+        for (int i = 0; i < profs->length(); i++) {
+          ObjP p = profs->getJSONObject(i);
+          if (!p) continue;
+          int tid = p->optInt("base_team_id", 0);
+          if (kC1Clubs.count(tid) && !seen.count(tid)) {
+            if (userBaseTeam > 0 && tid == userBaseTeam) continue;
+            seen.insert(tid);
+            pool.push_back(p);
+          }
+        }
+      } else if (activeEventId == 90005) {
+        // El Clásico: Real Madrid (109) vs FC Barcelona (108)
+        int targetTeam = 0;
+        if (userBaseTeam == 108) targetTeam = 109; // User is Barca -> AI is Real Madrid
+        else if (userBaseTeam == 109) targetTeam = 108; // User is Real Madrid -> AI is Barca
+
+        for (int i = 0; i < profs->length(); i++) {
+          ObjP p = profs->getJSONObject(i);
+          if (!p) continue;
+          int tid = p->optInt("base_team_id", 0);
+          if (targetTeam > 0) {
+            if (tid == targetTeam) pool.push_back(p);
+          } else {
+            if (tid == 108 || tid == 109) pool.push_back(p);
+          }
+        }
+      } else if (activeEventId == 90004) {
+        // Legend All-Stars Challenge: Legendary & Top European / Classic squads
+        static const std::set<int32_t> kLegendClubs = {
+          121, 108, 109, 100, 139, 119, 114, 126
+        };
+        std::set<int32_t> seen;
+        for (int i = 0; i < profs->length(); i++) {
+          ObjP p = profs->getJSONObject(i);
+          if (!p) continue;
+          int tid = p->optInt("base_team_id", 0);
+          if (kLegendClubs.count(tid) && !seen.count(tid)) {
+            if (userBaseTeam > 0 && tid == userBaseTeam) continue;
+            seen.insert(tid);
+            pool.push_back(p);
+          }
+        }
+      }
+
+      ObjP prof = nullptr;
+      if (!pool.empty()) {
+        int idx = (st->getInt("sequence") + (int)pool.size()) % (int)pool.size();
+        prof = pool[idx];
+      } else {
+        prof = profs->getJSONObject(st->getInt("sequence") % profs->length());
+      }
+
       int64_t now = zc::currentTimeMillis();
       while (st->getJSONObject("completed")->has(str(now))) now++;
       m = newObj()
@@ -782,12 +910,18 @@ Response z27SelectOpponent() {
               ->put("away", z27Identity(z27Team(prof->getInt("base_team_id"))))
               ->put("cpu_level", effectiveCpu)
               ->put("squad_id", z27Main())
+              ->put("event_id", (long long)activeEventId)
               ->put("created_at", (long long)(now / 1000));
       z27PutMeta("z27_active_match", m->toString());
     }
     ObjP opp = z27Opponent(m);
     opp->put("rqid", (long long)req->optLong("rqid", 1));
-    logRequest("ZIRU_MATCH_SELECTED", "game=" + str(m->getLong("game_id")) + " division=" + str(m->getInt("division")) + " cpu=" + m->getString("cpu_level"));
+    std::string reqMsg = req ? req->optString("msgid", "") : "";
+    if (!reqMsg.empty()) opp->put("msgid", reqMsg);
+    opp->put("team_name", m->getJSONObject("away")->getString("team_name"));
+    opp->put("team_name_short", m->getJSONObject("away")->getString("team_name_short"));
+    logRequest("ZIRU_MATCH_SELECTED", "game=" + str(m->getLong("game_id")) + " division=" + str(m->getInt("division")) + " cpu=" + m->getString("cpu_level") + " event=" + str(m->optLong("event_id", 0)));
+    z27SyncMatchJerseyPlayers(z27Home(m), z27AwaySquad(m));
     return serveObjectAsEncryptedMsgPack(opp);
   } catch (const std::exception& e) {
     return z27Error("CMD_GET_VSCOM_OPPONENT", e);
@@ -1049,6 +1183,44 @@ ObjP z27AwaySquad(const ObjP& active) {
   return awaySquad;
 }
 
+inline void z27SyncMatchJerseyPlayers(const ObjP& homeSquad, const ObjP& awaySquad) {
+  try {
+    zjersey::clearMatchPlayers();
+    if (homeSquad) {
+      int homeTid = homeSquad->optInt("team_id", 0);
+      ArrP pl = homeSquad->optJSONArray("player_list");
+      if (pl) {
+        for (int i = 0; i < pl->length(); i++) {
+          ObjP p = pl->getJSONObject(i);
+          if (!p) continue;
+          ObjP gid = p->optJSONObject("gameplayer_id");
+          int64_t pid = gid ? gid->optLong("id", 0) : 0;
+          int uni = p->optInt("uniform_number", i + 1);
+          if (pid > 0 && uni > 0) {
+            zjersey::registerMatchPlayer(0, homeTid, uni, pid);
+          }
+        }
+      }
+    }
+    if (awaySquad) {
+      int awayTid = awaySquad->optInt("team_id", 0);
+      ArrP pl = awaySquad->optJSONArray("player_list");
+      if (pl) {
+        for (int i = 0; i < pl->length(); i++) {
+          ObjP p = pl->getJSONObject(i);
+          if (!p) continue;
+          ObjP gid = p->optJSONObject("gameplayer_id");
+          int64_t pid = gid ? gid->optLong("id", 0) : 0;
+          int uni = p->optInt("uniform_number", i + 1);
+          if (pid > 0 && uni > 0) {
+            zjersey::registerMatchPlayer(1, awayTid, uni, pid);
+          }
+        }
+      }
+    }
+  } catch (...) {}
+}
+
 Response z27Start() {
   try {
     ObjP req = z27Request();
@@ -1082,6 +1254,7 @@ Response z27Start() {
         ->put("uniform_list_away", z27Copy(act->getJSONObject("away_uniform")));
     ObjP awaySquad = z27AwaySquad(act);
     out->put("squad_data_away", awaySquad);
+    z27SyncMatchJerseyPlayers(act->getJSONObject("home_squad"), awaySquad);
     ObjP ci = out->optJSONObject("commentary_info");
     if (ci) ci->put("pre_division", act->getInt("division"));
     logRequest("ZIRU_MATCH_START", "game=" + str(gid) + " squad=" + str(mainId) + " coach=" +

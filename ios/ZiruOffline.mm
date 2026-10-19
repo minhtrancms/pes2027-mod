@@ -577,9 +577,10 @@ static BOOL shouldHandleURL(NSURL* url) {
   if (!host) return NO;
   NSString* scheme = url.scheme.lowercaseString;
   if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) return NO;
-  if ([host isEqualToString:@"127.0.0.1"] && url.port.intValue == 8085) return YES;
-  if ([host isEqualToString:@"ntl.service.konami.net"]) return YES;                 // GateInfo.php
-  if ([host isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"]) return YES;          // livedata CDN in CmdLogin
+  if ([host isEqualToString:@"127.0.0.1"]) return YES;
+  if ([host isEqualToString:@"localhost"]) return YES;
+  if ([host hasSuffix:@"konami.net"] || [host hasSuffix:@"konami.com"]) return YES;
+  if ([host isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"]) return YES;
   return NO;
 }
 
@@ -593,7 +594,9 @@ static BOOL isCdnAssetURL(NSURL* url) {
   NSString* h = url.host.lowercaseString;
   return [h isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"] ||
          [h isEqualToString:@"127.0.0.1"] ||
-         [h isEqualToString:@"localhost"];
+         [h isEqualToString:@"localhost"] ||
+         [h hasSuffix:@"konami.net"] ||
+         [h hasSuffix:@"konami.com"];
 }
 static NSString* cdnCachePath(NSURL* url) {
   return [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn"] stringByAppendingPathComponent:url.path];
@@ -815,13 +818,22 @@ static NSData* bodyOf(NSURLRequest* r) {
 
 - (void)loadCdnAsset {
   NSURL* url = self.request.URL;
-  NSString* bundled = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:url.path];
-  NSString* bundledResp = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:url.path];
+  NSString* path = url.path;
+  NSString* subPath = [path hasPrefix:@"/prd/"] ? [path substringFromIndex:4] : path;
+  NSString* bundled = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:path];
+  NSString* bundledSub = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:subPath];
+  NSString* bundledResp = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:path];
+  NSString* bundledRespSub = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:subPath];
   NSString* cached = cdnCachePath(url);
-  for (NSString* f in @[ bundled, bundledResp, cached ]) {
+  NSString* docCdnSub = [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn"] stringByAppendingPathComponent:subPath];
+  NSString* docResp = [[gDocs stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:path];
+  NSString* docRespSub = [[gDocs stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:subPath];
+  NSString* docBanner = [gDocs stringByAppendingPathComponent:subPath];
+  NSString* docPlain = [gDocs stringByAppendingPathComponent:path.lastPathComponent];
+  for (NSString* f in @[ bundled, bundledSub, bundledResp, bundledRespSub, cached, docCdnSub, docResp, docRespSub, docBanner, docPlain ]) {
     NSData* d = [NSData dataWithContentsOfFile:f];
     if (d.length) {
-      ZLog(@"[CDN] %@ -> %@ (%lu bytes)", url.path, f == bundled ? @"bundle/cdn" : (f == bundledResp ? @"bundle/responses" : @"cache"), (unsigned long)d.length);
+      ZLog(@"[CDN] %@ -> %@ (%lu bytes)", url.path, f, (unsigned long)d.length);
       [self finishWithStatus:200 headers:@{@"Content-Type" : cdnMime(d), @"Content-Length" : [NSString stringWithFormat:@"%lu", (unsigned long)d.length]} data:d];
       return;
     }
@@ -841,7 +853,29 @@ static NSData* bodyOf(NSURLRequest* r) {
     CFRunLoopPerformBlock(rl, kCFRunLoopCommonModes, ^{
       ZiruURLProtocol* me = weakSelf;
       if (!me) return;
-      if (error || !status) {
+      if (error || !status || status != 200) {
+        // Fallback: If network failed, look for ANY banner in the same event / directory
+        NSString* relDir = [subPath stringByDeletingLastPathComponent];
+        NSArray<NSString*>* searchDirs = @[
+          [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:relDir],
+          [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn/prd"] stringByAppendingPathComponent:relDir],
+          [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn"] stringByAppendingPathComponent:relDir],
+          [[gDocs stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:relDir],
+          [gDocs stringByAppendingPathComponent:relDir]
+        ];
+        for (NSString* sDir in searchDirs) {
+          NSArray<NSString*>* items = [NSFileManager.defaultManager contentsOfDirectoryAtPath:sDir error:nil];
+          for (NSString* item in items) {
+            if ([item hasPrefix:@"."]) continue;
+            NSString* full = [sDir stringByAppendingPathComponent:item];
+            NSData* fb = [NSData dataWithContentsOfFile:full];
+            if (fb.length > 1024) {
+              ZLog(@"[CDN_FALLBACK] %@ -> %@ (%lu bytes)", url.path, full, (unsigned long)fb.length);
+              [me finishWithStatus:200 headers:@{@"Content-Type" : cdnMime(fb), @"Content-Length" : [NSString stringWithFormat:@"%lu", (unsigned long)fb.length]} data:fb];
+              return;
+            }
+          }
+        }
         [me.client URLProtocol:me didFailWithError:error ?: [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorBadServerResponse userInfo:nil]];
         return;
       }
