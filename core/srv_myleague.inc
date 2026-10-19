@@ -15,6 +15,7 @@ Response handleZiruGetMyclubPlayerData(const std::optional<Bytes>& b) {
       ObjP w, gp;
       ArrP params;
       if (j > 0) {
+        ziruTargetRecruitPid = j;
         int64_t restoredJ = z27RestorePlayerId(nullptr, j, j2, 0);
         if (restoredJ != j) j = restoredJ;
         w = getZiruPlayerWrapper(Value((long long)j), false);

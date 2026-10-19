@@ -577,10 +577,9 @@ static BOOL shouldHandleURL(NSURL* url) {
   if (!host) return NO;
   NSString* scheme = url.scheme.lowercaseString;
   if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) return NO;
-  if ([host isEqualToString:@"127.0.0.1"]) return YES;
-  if ([host isEqualToString:@"localhost"]) return YES;
-  if ([host hasSuffix:@"konami.net"] || [host hasSuffix:@"konami.com"]) return YES;
-  if ([host isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"]) return YES;
+  if ([host isEqualToString:@"127.0.0.1"] && url.port.intValue == 8085) return YES;
+  if ([host isEqualToString:@"ntl.service.konami.net"]) return YES;                 // GateInfo.php
+  if ([host isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"]) return YES;          // livedata CDN in CmdLogin
   return NO;
 }
 
@@ -594,9 +593,7 @@ static BOOL isCdnAssetURL(NSURL* url) {
   NSString* h = url.host.lowercaseString;
   return [h isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"] ||
          [h isEqualToString:@"127.0.0.1"] ||
-         [h isEqualToString:@"localhost"] ||
-         [h hasSuffix:@"konami.net"] ||
-         [h hasSuffix:@"konami.com"];
+         [h isEqualToString:@"localhost"];
 }
 static NSString* cdnCachePath(NSURL* url) {
   return [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn"] stringByAppendingPathComponent:url.path];
@@ -639,54 +636,31 @@ static uint32_t gOnlineUid;
 static std::atomic<bool> gOnlineInRoom{false};
 
 static void loadOnlineConfig() {
-  NSMutableDictionary* cfg = [NSMutableDictionary dictionary];
-  for (NSString* f in @[ [gBundleAssets stringByAppendingPathComponent:@"online.json"],
-                          [gDocs stringByAppendingPathComponent:@"PES2027-online.json"] ]) {
-    NSData* d = [NSData dataWithContentsOfFile:f];
-    id j = d ? [NSJSONSerialization JSONObjectWithData:d options:0 error:nil] : nil;
-    if ([j isKindOfClass:NSDictionary.class]) [cfg addEntriesFromDictionary:j];
-  }
-  NSString* server = [cfg[@"server"] isKindOfClass:NSString.class] ? cfg[@"server"] : nil;
-  BOOL enabled = cfg[@"enabled"] ? [cfg[@"enabled"] boolValue] : YES;
-  while ([server hasSuffix:@"/"]) server = [server substringToIndex:server.length - 1];
-  gOnlineServer = (enabled && server.length) ? server : nil;
-  NSURL* onlineURL = gOnlineServer ? [NSURL URLWithString:gOnlineServer] : nil;
-  if (gOnlineServer && (![onlineURL.scheme.lowercaseString isEqualToString:@"https"] || !onlineURL.host.length ||
-                       onlineURL.user.length || onlineURL.password.length || onlineURL.query.length ||
-                       onlineURL.fragment.length || onlineURL.path.length)) {
-    ZLog(@"[ONLINE] invalid server origin; HTTPS host and optional port required");
-    gOnlineServer = nil;
-  }
-  gOnlineToken = [cfg[@"token"] isKindOfClass:NSString.class] ? cfg[@"token"] : nil;
-  gOnlineCertSha256 = [cfg[@"cert_sha256"] isKindOfClass:NSString.class] ? [cfg[@"cert_sha256"] lowercaseString] : nil;
+  // Keep AWS online servers disabled per user request ("gỡ toàn bộ online qua sever aws đi", "chỉ giữ đá qua LAN thôi")
+  gOnlineServer = nil;
+  gOnlineToken = nil;
+  gOnlineCertSha256 = nil;
   NSUserDefaults* ud = NSUserDefaults.standardUserDefaults;
   gOnlineUid = (uint32_t)[ud integerForKey:@"ZiruOnlineUid"];
   if (!gOnlineUid) {
     gOnlineUid = 1000000000u + arc4random_uniform(1000000000u);
     [ud setInteger:gOnlineUid forKey:@"ZiruOnlineUid"];
   }
-  NSString* name = [cfg[@"name"] isKindOfClass:NSString.class] ? cfg[@"name"] : nil;
-  gOnlineName = name.length ? name : [NSString stringWithFormat:@"Player%04u", gOnlineUid % 10000];
-  if (gOnlineServer) ZLog(@"[ONLINE] server %@ uid %u name %@", gOnlineServer, gOnlineUid, gOnlineName);
-  else ZLog(@"[ONLINE] disabled (no server in ziru/online.json or Documents/PES2027-online.json)");
+  gOnlineName = [NSString stringWithFormat:@"Player%04u", gOnlineUid % 10000];
+  ZLog(@"[ONLINE] disabled (AWS servers decommissioned; local LAN/Bluetooth match only)");
 }
 
 static NSString* gateCommand(NSURL* url) {
   NSString* last = url.path.lastPathComponent;
-  if ([last.lowercaseString hasSuffix:@".php"]) {
-    last = [last substringToIndex:last.length - 4];
-  }
-  if ([last.lowercaseString hasPrefix:@"gate_"]) {
-    last = [last substringFromIndex:5];
-  }
-  return last.uppercaseString;
+  if (![last hasPrefix:@"gate_"] || ![last hasSuffix:@".php"]) return nil;
+  return [last substringWithRange:NSMakeRange(5, last.length - 9)];
 }
 
 static BOOL isOnlineCommand(NSString* cmd) {
-  static NSSet* alwaysNorm, *inRoomNorm;
+  static NSSet* always, *inRoom;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    NSArray* always = @[
+    always = [NSSet setWithArray:@[
       @"CMD_CREATEJOIN_ROOM", @"CMD_JOIN_ROOM", @"CMD_GET_ROOM_INFO", @"CMD_GET_ROOM_LIST", @"CMD_LEAVE_ROOM",
       @"CMD_SET_ROOM_MATCH_READY", @"CMD_UNSET_ROOM_MATCH_READY", @"CMD_SET_ROOM_SETTINGS", @"CMD_SET_ROOM_USER_ENTRY_SIDE",
       @"CMD_SET_ROOM_USER_SQUAD_ENABLE", @"CMD_SET_ROOM_USER_COMMENT", @"CMD_RETURN_ROOM", @"CMD_KICK_ROOM_USER",
@@ -694,65 +668,35 @@ static BOOL isOnlineCommand(NSString* cmd) {
       @"CMD_GET_COMMUNITY_ROOM_LIST", @"CMD_SEND_JOIN_COMMUNITY_ROOM_REQUEST", @"CMD_WATCH_ROOM_CONNECTION",
       @"CMD_GET_TURN_SERVER_LIST", @"CMD_SEND_TURN_ADDRESS_DATA", @"CMD_GET_TURN_ADDRESS_DATA", @"CMD_WATCH_TURN_ADDRESS_DATA",
       @"CMD_GET_GAME_SESSION", @"CMD_GET_SESSION_ID", @"CMD_SEND_SESSION_ID", @"CMD_SET_GAME_SESSION_CHECK_RES",
-      @"CMD_GET_GAME_SESSION_CHECK_RES", @"CMD_SEND_SESSION_FAILED_NOTICE", @"CMD_MATCH_SETTINGS"];
-    NSArray* inRoom = @[ @"CMD_CHANGE_GAMEPHASE", @"CMD_ADD_SCORE", @"CMD_ADD_FOUL", @"CMD_SET_GAME_RESULT",
-                         @"CMD_GET_GAME_RESULT", @"CMD_CHECK_GAME_RESULT", @"CMD_ALIGN_PROGRESS" ];
-    NSMutableSet* an = [NSMutableSet set];
-    for (NSString* s in always) [an addObject:[s.uppercaseString stringByReplacingOccurrencesOfString:@"_" withString:@""]];
-    alwaysNorm = an;
-    NSMutableSet* irn = [NSMutableSet set];
-    for (NSString* s in inRoom) [irn addObject:[s.uppercaseString stringByReplacingOccurrencesOfString:@"_" withString:@""]];
-    inRoomNorm = irn;
+      @"CMD_GET_GAME_SESSION_CHECK_RES", @"CMD_SEND_SESSION_FAILED_NOTICE", @"CMD_MATCH_SETTINGS"]];
+    // used by offline matches too: only online while this device is in an online room
+    inRoom = [NSSet setWithArray:@[ @"CMD_CHANGE_GAMEPHASE", @"CMD_ADD_SCORE", @"CMD_ADD_FOUL", @"CMD_SET_GAME_RESULT",
+                                    @"CMD_GET_GAME_RESULT", @"CMD_CHECK_GAME_RESULT", @"CMD_ALIGN_PROGRESS" ]];
   });
-  if (!gOnlineServer || !cmd.length) return NO;
-  NSString* norm = [cmd.uppercaseString stringByReplacingOccurrencesOfString:@"_" withString:@""];
-  return [alwaysNorm containsObject:norm] || (gOnlineInRoom && [inRoomNorm containsObject:norm]);
+  if (!gOnlineServer || !cmd) return NO;
+  return [always containsObject:cmd] || (gOnlineInRoom && [inRoom containsObject:cmd]);
 }
 
-@interface ZiruOnlineDelegate : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate>
-- (void)handleChallenge:(NSURLAuthenticationChallenge*)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler;
+@interface ZiruOnlineDelegate : NSObject <NSURLSessionDelegate>
 @end
-
 @implementation ZiruOnlineDelegate
+// A self-signed endpoint must match the certificate fingerprint bundled with its configuration.
 - (void)URLSession:(NSURLSession*)session didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
- completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
-  [self handleChallenge:challenge completionHandler:completionHandler];
-}
-
-- (void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge
- completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
-  [self handleChallenge:challenge completionHandler:completionHandler];
-}
-
-- (void)handleChallenge:(NSURLAuthenticationChallenge*)challenge
-      completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
+    completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
   NSURLProtectionSpace* ps = challenge.protectionSpace;
   if ([ps.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust] &&
-      [ps.host isEqualToString:[NSURL URLWithString:gOnlineServer].host]) {
+      [ps.host isEqualToString:[NSURL URLWithString:gOnlineServer].host] && gOnlineCertSha256.length) {
     SecCertificateRef cert = ps.serverTrust ? SecTrustGetCertificateAtIndex(ps.serverTrust, 0) : nullptr;
     NSData* der = cert ? CFBridgingRelease(SecCertificateCopyData(cert)) : nil;
     unsigned char digest[CC_SHA256_DIGEST_LENGTH] = {0};
     if (der) CC_SHA256(der.bytes, (CC_LONG)der.length, digest);
     NSMutableString* fingerprint = [NSMutableString stringWithCapacity:64];
     for (unsigned char b : digest) [fingerprint appendFormat:@"%02x", b];
-    if (!gOnlineCertSha256.length || (der && [fingerprint isEqualToString:gOnlineCertSha256])) {
-      if (ps.serverTrust && cert) {
-        SecTrustSetAnchorCertificates(ps.serverTrust, (__bridge CFArrayRef)@[ (__bridge id)cert ]);
-        SecTrustSetAnchorCertificatesOnly(ps.serverTrust, false);
-        CFDataRef exceptions = SecTrustCopyExceptions(ps.serverTrust);
-        if (exceptions) {
-          SecTrustSetExceptions(ps.serverTrust, exceptions);
-          CFRelease(exceptions);
-        }
-      }
-      ZLog(@"[ONLINE] TLS certificate pinned & trusted for %@", ps.host);
+    if (der && [fingerprint isEqualToString:gOnlineCertSha256])
       completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:ps.serverTrust]);
-      return;
-    } else {
-      ZLog(@"[ONLINE] TLS certificate fingerprint mismatch: cert=%@ expected=%@", fingerprint, gOnlineCertSha256);
+    else
       completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
-      return;
-    }
+    return;
   }
   completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
@@ -818,22 +762,13 @@ static NSData* bodyOf(NSURLRequest* r) {
 
 - (void)loadCdnAsset {
   NSURL* url = self.request.URL;
-  NSString* path = url.path;
-  NSString* subPath = [path hasPrefix:@"/prd/"] ? [path substringFromIndex:4] : path;
-  NSString* bundled = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:path];
-  NSString* bundledSub = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:subPath];
-  NSString* bundledResp = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:path];
-  NSString* bundledRespSub = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:subPath];
+  NSString* bundled = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:url.path];
+  NSString* bundledResp = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:url.path];
   NSString* cached = cdnCachePath(url);
-  NSString* docCdnSub = [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn"] stringByAppendingPathComponent:subPath];
-  NSString* docResp = [[gDocs stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:path];
-  NSString* docRespSub = [[gDocs stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:subPath];
-  NSString* docBanner = [gDocs stringByAppendingPathComponent:subPath];
-  NSString* docPlain = [gDocs stringByAppendingPathComponent:path.lastPathComponent];
-  for (NSString* f in @[ bundled, bundledSub, bundledResp, bundledRespSub, cached, docCdnSub, docResp, docRespSub, docBanner, docPlain ]) {
+  for (NSString* f in @[ bundled, bundledResp, cached ]) {
     NSData* d = [NSData dataWithContentsOfFile:f];
     if (d.length) {
-      ZLog(@"[CDN] %@ -> %@ (%lu bytes)", url.path, f, (unsigned long)d.length);
+      ZLog(@"[CDN] %@ -> %@ (%lu bytes)", url.path, f == bundled ? @"bundle/cdn" : (f == bundledResp ? @"bundle/responses" : @"cache"), (unsigned long)d.length);
       [self finishWithStatus:200 headers:@{@"Content-Type" : cdnMime(d), @"Content-Length" : [NSString stringWithFormat:@"%lu", (unsigned long)d.length]} data:d];
       return;
     }
@@ -853,29 +788,7 @@ static NSData* bodyOf(NSURLRequest* r) {
     CFRunLoopPerformBlock(rl, kCFRunLoopCommonModes, ^{
       ZiruURLProtocol* me = weakSelf;
       if (!me) return;
-      if (error || !status || status != 200) {
-        // Fallback: If network failed, look for ANY banner in the same event / directory
-        NSString* relDir = [subPath stringByDeletingLastPathComponent];
-        NSArray<NSString*>* searchDirs = @[
-          [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:relDir],
-          [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn/prd"] stringByAppendingPathComponent:relDir],
-          [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn"] stringByAppendingPathComponent:relDir],
-          [[gDocs stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:relDir],
-          [gDocs stringByAppendingPathComponent:relDir]
-        ];
-        for (NSString* sDir in searchDirs) {
-          NSArray<NSString*>* items = [NSFileManager.defaultManager contentsOfDirectoryAtPath:sDir error:nil];
-          for (NSString* item in items) {
-            if ([item hasPrefix:@"."]) continue;
-            NSString* full = [sDir stringByAppendingPathComponent:item];
-            NSData* fb = [NSData dataWithContentsOfFile:full];
-            if (fb.length > 1024) {
-              ZLog(@"[CDN_FALLBACK] %@ -> %@ (%lu bytes)", url.path, full, (unsigned long)fb.length);
-              [me finishWithStatus:200 headers:@{@"Content-Type" : cdnMime(fb), @"Content-Length" : [NSString stringWithFormat:@"%lu", (unsigned long)fb.length]} data:fb];
-              return;
-            }
-          }
-        }
+      if (error || !status) {
         [me.client URLProtocol:me didFailWithError:error ?: [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorBadServerResponse userInfo:nil]];
         return;
       }
@@ -1155,8 +1068,7 @@ static void setupGraphicsEnhancements() {
     }
   }
 
-  appendFn(u" -t.MaxFPS=120 -r.TonemapperGamma=2.1");
-  ZLog(@"[GRAPHICS] Unlocked engine tick cap to 120 FPS and warmed tonemapper (-t.MaxFPS=120 -r.TonemapperGamma=2.1)");
+  ZLog(@"[GRAPHICS] Native timing/quality retained; no automatic tick or gamma override");
 }
 
 // ---------------------------------------------------------------- launch gating
@@ -1187,8 +1099,14 @@ static void ensureSymlink(NSString* linkPath, NSString* targetPath) {
   BOOL isDir = NO;
   if ([fm fileExistsAtPath:linkPath isDirectory:&isDir]) {
     if (!isDir && curDest == nil) {
-      ZLog(@"[DATA_PRESERVE] keeping existing file %@", linkPath.lastPathComponent);
-      return;
+      NSDictionary* attrs = [fm attributesOfItemAtPath:linkPath error:nil];
+      unsigned long long sz = [attrs fileSize];
+      if (sz > 1024) {
+        ZLog(@"[DATA_PRESERVE] keeping existing file %@", linkPath.lastPathComponent);
+        return;
+      }
+      // Remove tiny dummy/stub files (<= 1024 bytes) so real symlinks can take over
+      [fm removeItemAtPath:linkPath error:nil];
     }
     if (isDir && curDest == nil) {
       NSArray* contents = [fm contentsOfDirectoryAtPath:linkPath error:nil];
@@ -1433,6 +1351,19 @@ static BOOL checkDirectFolderData(NSString** why) {
     } else if ([fm fileExistsAtPath:sp]) {
       NSString* dst = [dlDir stringByAppendingPathComponent:stale];
       if (![fm fileExistsAtPath:dst]) [fm moveItemAtPath:sp toPath:dst error:nil];
+    }
+  }
+
+  // Safety guard: ensure base engine paks (pc3001, pc3011, pc3600, pc3611) stay in pakDir, never in dlDir!
+  for (NSString* core in @[@"pc3001", @"pc3011", @"pc3600", @"pc3611"]) {
+    for (NSString* ext in @[@".pak", @".ucas", @".utoc"]) {
+      NSString* name = [NSString stringWithFormat:@"%@_mobile_ios%@", core, ext];
+      NSString* wrong = [dlDir stringByAppendingPathComponent:name];
+      NSString* right = [pakDir stringByAppendingPathComponent:name];
+      if ([fm fileExistsAtPath:wrong] && ![fm fileExistsAtPath:right]) {
+        [fm moveItemAtPath:wrong toPath:right error:nil];
+        ZLog(@"[CORE_PAK] Restored %@ from Download/ to pak/", name);
+      }
     }
   }
 
@@ -2203,15 +2134,9 @@ static BOOL hookDidFinish(id self, SEL _cmd, UIApplication* app, NSDictionary* o
 
   // Let UE4 initialize its window and Metal graphics first!
   BOOL res = ((BOOL(*)(id, SEL, id, id))gOrigDidFinish)(self, _cmd, app, opts);
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    installModButton(getAppWindow(self));
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+    // installModButton(getAppWindow(self));
     if (!modsOK) showModError(getAppWindow(self), [NSString stringWithUTF8String:modError.c_str()]);
-  });
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    installModButton(getAppWindow(self));
-  });
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(6.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    installModButton(getAppWindow(self));
   });
 
   // Check if direct data exists
@@ -2326,18 +2251,8 @@ __attribute__((constructor)) static void ziruInit() {
       gGameStarted = true;
     }
 
-    // 120 FPS Unlock via CADisplayLink & Dynamic Max FPS
-    Class dlCls = CADisplayLink.class;
-    if (dlCls) {
-      gOrigDisplayLinkWithTarget = swizzleClassMethod(dlCls, @selector(displayLinkWithTarget:selector:), (IMP)hookDisplayLinkWithTarget);
-      gOrigSetPreferredFramesPerSecond = swizzleInstance(dlCls, @selector(setPreferredFramesPerSecond:), (IMP)hookSetPreferredFramesPerSecond);
-      if (@available(iOS 15.0, *)) {
-        gOrigSetPreferredFrameRateRange = swizzleInstance(dlCls, @selector(setPreferredFrameRateRange:), (IMP)hookSetPreferredFrameRateRange);
-      }
-      ZLog(@"[120FPS] CADisplayLink 120 FPS hooks installed");
-    }
-    enableDynamicMaxFps();
-    setupGraphicsEnhancements();
+    // Preserve requested presentation and simulation cadence.
+    ZLog(@"[TIMING_NATIVE] native CADisplayLink and engine tick limits retained");
     startFpsMeter();
   }
 }

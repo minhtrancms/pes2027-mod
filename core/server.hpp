@@ -131,6 +131,7 @@ class OfflineServer {
   int64_t ziruSquadRqid = 0;
   int64_t ziruTargetPlayerId = 0;
   int64_t ziruTargetSerial = 0;
+  int64_t ziruTargetRecruitPid = 0;
   int32_t ziruTrainingIndex = 0;
 
   // ---- helpers for Android APIs ----

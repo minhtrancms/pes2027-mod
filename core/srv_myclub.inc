@@ -64,6 +64,10 @@ void applyZiruDynamicRecruit(const ObjP& jo) {
     std::string s = prefs.getString(key, "");
     ArrP remaining = s.empty() ? Array::parse(ids->toString()) : Array::parse(s);
     int length = remaining->length();
+    if (length <= 0) {
+      remaining = Array::parse(ids->toString());
+      length = remaining->length();
+    }
     if (length <= 0) { zs::logw("OFFLINE_SERVER", "[ZIRU_V10_DRAW] pack exhausted"); return; }
     if (i > length) i = length;
     ArrP list = jo->optJSONArray("gameplayer_list");
@@ -73,9 +77,26 @@ void applyZiruDynamicRecruit(const ObjP& jo) {
       return;
     int64_t j2 = prefs.getLong("ziru_next_serial", o3->optLong("serial"));
     ArrP out = newArr();
-    zc::JavaRandom random;
     for (int i3 = 0; i3 < i; i3++) {
-      Value removed = remaining->remove(random.nextInt(remaining->length()));
+      Value removed;
+      if (ziruTargetRecruitPid > 0) {
+        int targetIdx = -1;
+        for (int idx = 0; idx < remaining->length(); idx++) {
+          int64_t cand = remaining->optLong(idx, 0);
+          if (cand == ziruTargetRecruitPid || (cand & 0xFFFFFF) == (ziruTargetRecruitPid & 0xFFFFFF)) {
+            targetIdx = idx;
+            break;
+          }
+        }
+        if (targetIdx >= 0) {
+          removed = remaining->remove(targetIdx);
+        } else {
+          removed = Value((long long)ziruTargetRecruitPid);
+        }
+        ziruTargetRecruitPid = 0;
+      } else {
+        removed = remaining->remove(0);
+      }
       ObjP w = getZiruPlayerWrapper(removed, true);
       if (!w) {
         w = Object::parse(o1->toString());
