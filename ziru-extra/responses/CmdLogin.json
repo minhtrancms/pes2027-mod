@@ -907,6 +907,27 @@
                 "serial": 359042717000000640
               },
               "uniform_number": 9
+            },
+            {
+              "gameplayer_id": {
+                "id": 9901397,
+                "serial": 359042717000000990
+              },
+              "uniform_number": 10
+            },
+            {
+              "gameplayer_id": {
+                "id": 37576,
+                "serial": 359042717000000991
+              },
+              "uniform_number": 9
+            },
+            {
+              "gameplayer_id": {
+                "id": 40291,
+                "serial": 359042717000000992
+              },
+              "uniform_number": 11
             }
           ],
           "coach": [
@@ -3882,7 +3903,7 @@
             "present_num": 1
           }
         ],
-        "uniform_number": 10,
+        "uniform_number": 11,
         "level_info": {
           "level": 1,
           "level_limit": 1,

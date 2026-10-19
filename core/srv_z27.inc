@@ -289,6 +289,30 @@ ObjP z27Squad(int32_t id) {
         }
       }
     }
+    std::set<int64_t> existingPids;
+    for (int i = 0; i < pl->length(); i++) {
+      ObjP item = pl->optJSONObject(i);
+      ObjP gid = item ? item->optJSONObject("gameplayer_id") : nullptr;
+      if (gid) existingPids.insert(gid->optLong("id", 0));
+    }
+    static const struct { int64_t id; int64_t serial; int uni; } kMustHaveLegends[] = {
+      {9901397, 359042717000000990LL, 10},
+      {37576,   359042717000000991LL, 9},
+      {40291,   359042717000000992LL, 11}
+    };
+    for (const auto& leg : kMustHaveLegends) {
+      if (existingPids.find(leg.id) == existingPids.end()) {
+        ObjP w = getZiruPlayerWrapper(Value((long long)leg.id), false);
+        if (w) {
+          ObjP legItem = newObj();
+          legItem->put("gameplayer_id", newObj()->put("id", (long long)leg.id)->put("serial", (long long)leg.serial));
+          legItem->put("uniform_number", leg.uni);
+          pl->put(legItem);
+          existingPids.insert(leg.id);
+          mod = true;
+        }
+      }
+    }
     if (mod && s) {
       ziruDb->saveSquad(id, res->toString());
     }
@@ -566,6 +590,23 @@ void z27Restore(const ObjP& jo) {
         ObjP p = all->getJSONObject(i);
         int64_t s = p->getJSONObject("gameplayer_id")->getLong("serial");
         if (!isZiruPlayerSold(s) && !have.count(s)) kept->put(p);
+      }
+      std::set<int64_t> havePids;
+      for (int i = 0; i < kept->length(); i++) havePids.insert(kept->getJSONObject(i)->getJSONObject("gameplayer_id")->optLong("id", 0));
+      ObjP loginEI = nn(loadZiruJsonAssetObject("responses/CmdLogin.json"))->getJSONObject("entry_info");
+      ArrP loginGP = loginEI ? loginEI->optJSONArray("gameplayer_list") : nullptr;
+      if (loginGP) {
+        for (int i = 0; i < loginGP->length(); i++) {
+          ObjP p = loginGP->optJSONObject(i);
+          ObjP gid = p ? p->optJSONObject("gameplayer_id") : nullptr;
+          if (gid && !havePids.count(gid->optLong("id", 0))) {
+            int64_t pid = gid->optLong("id", 0);
+            if (pid == 9901397 || pid == 37576 || pid == 40291) {
+              kept->put(z27Copy(p));
+              havePids.insert(pid);
+            }
+          }
+        }
       }
       gl = kept;
     }
