@@ -11,7 +11,9 @@ if REPO_ROOT not in sys.path:
 import tools.make_extra_pak as p
 NAME = "pc8000_mobile_ios"
 BLOCK = 65536
-PC1000_PATH = os.path.join(REPO_ROOT, "PES2027-data", "pak", "pc1000_mobile_ios.utoc")
+PC1000_PATH = os.path.join(REPO_ROOT, "assets_data", "PES2027-data", "pak", "pc1000_mobile_ios.utoc")
+if not os.path.exists(PC1000_PATH):
+    PC1000_PATH = os.path.join(REPO_ROOT, "PES2027-data", "pak", "pc1000_mobile_ios.utoc")
 OUT_DIR = os.path.join(REPO_ROOT, "ziru-extra", "pak_extra")
 PNG2BGRA = os.path.join(REPO_ROOT, "build", "png2bgra")
 
@@ -104,10 +106,13 @@ def main():
             for prefix_type in ("f", "r"):
                 target_rel_path = f"ui/Data/Symbol/Emblem/e_{tid:06d}_{prefix_type}{suffix}.uasset"
                 
-                # Derive deterministic chunk ID and package ID
-                pid_hash = hashlib.sha1(target_rel_path.lower().encode()).digest()
-                pid = struct.unpack("<Q", pid_hash[:8])[0]
-                cid_b = struct.pack("<Q", pid) + b"\x00\x00\x00\x02"
+                # Use EXACT chunk ID from base_toc so UE4 IoStore matches and overrides it
+                if target_rel_path in base_toc.files:
+                    target_idx = base_toc.files[target_rel_path]
+                    cid_b = base_toc.ids[target_idx]
+                else:
+                    cid_b = base_toc.ids[orig_idx]
+                pid = struct.unpack("<Q", cid_b[:8])[0]
 
                 meta = hashlib.sha1(patched_data).digest() + b"\x00" * 13
                 ni = len(chunks)

@@ -215,11 +215,8 @@ static void nativeSetUniformNumber(void* actor, int requested) {
   if (requested > 0 && requested <= 99) {
     int32_t cur = *(int32_t*)((uint8_t*)actor + 0x1708);
     int32_t state = *(int32_t*)((uint8_t*)actor + 0x1920);
-    // DO NOT re-trigger state machine if number is already set and state machine is running or done
-    if (cur == requested && state > 0) return;
 
     *(int32_t*)((uint8_t*)actor + 0x1708) = requested;
-    *(int32_t*)((uint8_t*)actor + 0x1920) = 1; // State = 1 to kick off BackNumberStep
     *(uint8_t*)((uint8_t*)actor + 0xf44) = 1;  // Back number display flag
     *(uint8_t*)((uint8_t*)actor + 0xf6c) = 1;  // Front number display flag
     *(uint8_t*)((uint8_t*)actor + 0xf94) = 1;  // Pants number display flag
@@ -227,6 +224,10 @@ static void nativeSetUniformNumber(void* actor, int requested) {
     *(uint8_t*)((uint8_t*)actor + 0x1aaf) = 1; // Step active flag
     uint8_t* p = (uint8_t*)actor + 0x1000;
     p[0xaa7] = 1; p[0xaaa] = 1; p[0xaab] = 1; p[0xaaf] = 1;
+
+    if (state == 0 || cur != requested) {
+      *(int32_t*)((uint8_t*)actor + 0x1920) = 1; // State = 1 to kick off BackNumberStep
+    }
   }
 }
 
@@ -241,9 +242,11 @@ static void install() {
 
   // 1. Hook SetupFromPlayerId at real vtable slots (APlayerActorMobile & APlayerActorMobileHigh)
   const uintptr_t setupSlots[] = {0x105f287a0ULL, 0x105f29178ULL};
+  const uintptr_t expectedSetup = 0x1008a02f0ULL;
   for (uintptr_t slot : setupSlots) {
     uintptr_t cur = *(uintptr_t*)(slot + slide);
-    if ((cur & 0xFFFFFFULL) == (0x8a02f0ULL)) {
+    uintptr_t unslid = (cur >= (uintptr_t)slide) ? (cur - (uintptr_t)slide) : cur;
+    if (cur == expectedSetup + slide || (unslid & 0xFFFFFFULL) == (expectedSetup & 0xFFFFFFULL)) {
       vm_address_t page = (slot + slide) & ~(vm_address_t)(psize - 1);
       if (vm_protect(mach_task_self(), page, psize, false, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY) == KERN_SUCCESS ||
           vm_protect(mach_task_self(), page, psize, false, VM_PROT_READ | VM_PROT_WRITE) == KERN_SUCCESS) {
@@ -257,7 +260,15 @@ static void install() {
   // 2. Install atlas fallback hooks with per-canvas fallback (FontBack, FontFront, FontPants, FontName)
   const uintptr_t slots[] = {0x105f177f8, 0x105f17800, 0x105f17808, 0x105f17818};
   const uintptr_t functions[] = {0x100851490, 0x100851894, 0x1008518c0, 0x1008511c8};
-  for (int i = 0; i < 4; ++i) if ((*(uintptr_t*)(slots[i] + slide) & 0xFFFFFFULL) != (functions[i] & 0xFFFFFFULL)) {
+  bool vtableMatch = true;
+  for (int i = 0; i < 4; ++i) {
+    uintptr_t cur = *(uintptr_t*)(slots[i] + slide);
+    uintptr_t unslid = (cur >= (uintptr_t)slide) ? (cur - (uintptr_t)slide) : cur;
+    if (cur != functions[i] + slide && (unslid & 0xFFFFFFULL) != (functions[i] & 0xFFFFFFULL)) {
+      vtableMatch = false; break;
+    }
+  }
+  if (!vtableMatch) {
     ZLog(@"[JERSEY] unsupported native vtable; hooks disabled"); return;
   }
   vm_address_t page = (slots[0] + slide) & ~(vm_address_t)(psize - 1);
@@ -277,9 +288,11 @@ static void install() {
 
   // 3. SetUniformNumber hook at real vtable slots (APlayerActorMobile & APlayerActorMobileHigh)
   const uintptr_t numSlots[] = {0x105f286c0ULL, 0x105f29098ULL};
+  const uintptr_t expectedSetNum = 0x10089f2e8ULL;
   for (uintptr_t slot : numSlots) {
     uintptr_t cur = *(uintptr_t*)(slot + slide);
-    if ((cur & 0xFFFFFFULL) == (0x89f2e8ULL)) {
+    uintptr_t unslid = (cur >= (uintptr_t)slide) ? (cur - (uintptr_t)slide) : cur;
+    if (cur == expectedSetNum + slide || (unslid & 0xFFFFFFULL) == (expectedSetNum & 0xFFFFFFULL)) {
       vm_address_t p = (slot + slide) & ~(vm_address_t)(psize - 1);
       if (vm_protect(mach_task_self(), p, psize, false, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY) == KERN_SUCCESS ||
           vm_protect(mach_task_self(), p, psize, false, VM_PROT_READ | VM_PROT_WRITE) == KERN_SUCCESS) {

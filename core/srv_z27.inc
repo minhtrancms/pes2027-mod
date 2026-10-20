@@ -35,48 +35,27 @@ Response z27Error(const std::string& msg, const std::exception& e) {
 ObjP z27Teams() { return nn(loadZiruJsonAssetObject("responses/ZIRU_MATCH_TEAMS.json"))->getJSONObject("teams"); }
 
 static bool z27ApplyRealClubIdentity(int32_t tid, std::string& name, std::string& shortName) {
-  static const std::unordered_map<int32_t, std::pair<std::string, std::string>> realClubs = {
-    {109, {"Real Madrid", "RMA"}},
-    {173, {"Manchester City", "MCI"}},
-    {103, {"Liverpool FC", "LIV"}},
-    {102, {"Chelsea FC", "CHE"}},
-    {172, {"Atlético de Madrid", "ATM"}},
-    {120, {"Juventus FC", "JUV"}},
-    {124, {"ACF Fiorentina", "FIO"}},
-    {125, {"AS Roma", "ASR"}},
-    {104, {"Tottenham Hotspur", "TOT"}},
-    {105, {"Newcastle United", "NEW"}},
-    {106, {"Aston Villa", "AVL"}},
-    {107, {"West Ham United", "WHU"}},
-    {110, {"Sevilla FC", "SEV"}},
-    {111, {"Real Betis", "BET"}},
-    {112, {"Real Sociedad", "RSO"}},
-    {113, {"Villarreal CF", "VIL"}},
-    {118, {"Napoli", "NAP"}},
-    {126, {"Borussia Dortmund", "BVB"}},
-    {127, {"FC Bayern München", "BAY"}},
-    {128, {"Bayer 04 Leverkusen", "B04"}},
-    {115, {"AS Monaco", "ASM"}},
-    {177, {"Everton FC", "EVE"}},
-    {178, {"Fulham FC", "FUL"}},
-    {186, {"Bologna FC 1909", "BOL"}},
-    {204, {"Leicester City", "LEI"}},
-    {207, {"Southampton FC", "SOU"}},
-    {208, {"Wolverhampton Wanderers", "WOL"}},
-    {258, {"Athletic Club Bilbao", "ATH"}},
-    {377, {"Brighton & Hove Albion", "BHA"}},
-    {382, {"Crystal Palace", "CRY"}},
-    {389, {"Nottingham Forest", "NFO"}},
-    {4071, {"AFC Bournemouth", "BOU"}},
-    {4180, {"Brentford FC", "BRE"}},
-    {2187, {"Girona FC", "GIR"}},
-    {5010, {"RB Leipzig", "RBL"}}
-  };
-  auto it = realClubs.find(tid);
-  if (it != realClubs.end()) {
-    name = it->second.first;
-    shortName = it->second.second;
-    return true;
+  static ObjP allTeamNames = nullptr;
+  static std::mutex tnMu;
+  {
+    std::lock_guard<std::mutex> g(tnMu);
+    if (!allTeamNames) {
+      try {
+        allTeamNames = loadZiruJsonAssetObject("responses/ZIRU_2027_TEAM_NAMES.json");
+      } catch (...) {}
+    }
+  }
+  if (allTeamNames) {
+    ObjP entry = allTeamNames->optJSONObject(str(tid));
+    if (entry) {
+      std::string n = entry->optString("name", "");
+      std::string sn = entry->optString("short", "");
+      if (!n.empty()) {
+        name = n;
+        shortName = sn;
+        return true;
+      }
+    }
   }
   return false;
 }

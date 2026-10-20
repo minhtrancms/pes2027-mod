@@ -995,7 +995,7 @@ static void hookSetPreferredFramesPerSecond(CADisplayLink* self, SEL _cmd, NSInt
   }
   if (@available(iOS 15.0, *)) {
     float f = (float)targetFps;
-    self.preferredFrameRateRange = CAFrameRateRangeMake(f, f, f);
+    self.preferredFrameRateRange = CAFrameRateRangeMake((f >= 60.0f) ? 30.0f : 20.0f, f, f);
   }
 }
 
@@ -1008,7 +1008,7 @@ static CADisplayLink* hookDisplayLinkWithTarget(Class cls, SEL _cmd, id target, 
     link.preferredFramesPerSecond = maxFps;
     if (@available(iOS 15.0, *)) {
       float f = (float)maxFps;
-      link.preferredFrameRateRange = CAFrameRateRangeMake(f, f, f);
+      link.preferredFrameRateRange = CAFrameRateRangeMake((f >= 60.0f) ? 30.0f : 20.0f, f, f);
     }
   }
   return link;
