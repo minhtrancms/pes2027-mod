@@ -23,8 +23,8 @@ static AssetFn originalAsset;
 static SetUniformNumberFn originalSetUniformNumber;
 static SetupFromPlayerIdFn originalSetupFromPlayerId;
 
-static std::mutex mutex;
-static std::set<void*> retried;
+static void* gRetriedActors[64];
+static std::atomic<size_t> gRetriedCount{0};
 static void asset(void* actor, NativeString* name, bool edit) { originalAsset(actor, name, edit); }
 static intptr_t gSlide = 0;
 
@@ -36,13 +36,17 @@ static bool ready(void* actor) {
   if (!originalReady(actor)) return false;
   auto p = (uint8_t*)actor;
   if (!*(void**)(p + 0x2b0)) {
-    auto assetStr = (NativeString*)(p + 0x2c0);
-    bool retry = false;
-    {
-      std::lock_guard<std::mutex> guard(mutex);
-      if (retried.insert(actor).second) retry = true;
+    // Check if we already retried this actor without any mutex or heap allocations
+    bool alreadyRetried = false;
+    size_t count = gRetriedCount.load(std::memory_order_relaxed);
+    for (size_t i = 0; i < count && i < 64; ++i) {
+      if (gRetriedActors[i] == actor) { alreadyRetried = true; break; }
     }
-    if (retry) {
+    if (!alreadyRetried && count < 64) {
+      gRetriedActors[count] = actor;
+      gRetriedCount.fetch_add(1, std::memory_order_relaxed);
+
+      auto assetStr = (NativeString*)(p + 0x2c0);
       static const char16_t fbName[]  = u"T_EditUni_FontName_00_D";
       static const char16_t fbBack[]  = u"T_EditUni_FontBack_00_D";
       static const char16_t fbFront[] = u"T_EditUni_FontFront_00_D";
@@ -75,8 +79,17 @@ static void draw(void* actor, void* canvas) {
   originalDraw(actor, canvas);
 }
 
+#include <unordered_map>
+static std::unordered_map<int64_t, std::string> gNameCache;
+static std::mutex gCacheMu;
+
 static const char* lookupPlayerShirtName(int64_t playerId, intptr_t slide) {
   if (playerId <= 0) return nullptr;
+  {
+    std::lock_guard<std::mutex> g(gCacheMu);
+    auto it = gNameCache.find(playerId);
+    if (it != gNameCache.end()) return it->second.c_str();
+  }
   auto getMgr = (void* (*)())(0x104bba084 + slide);
   auto findRec = (void* (*)(void*, int, int64_t))(0x104b9588c + slide);
   auto getName = (const char* (*)(void*))(0x104bc2460 + slide);
@@ -107,7 +120,11 @@ static const char* lookupPlayerShirtName(int64_t playerId, intptr_t slide) {
         if (!name || !name[0]) {
           name = (const char*)((uint8_t*)rec + 0x89);
         }
-        if (name && name[0]) return name;
+        if (name && name[0]) {
+          std::lock_guard<std::mutex> g(gCacheMu);
+          gNameCache[playerId] = name;
+          return gNameCache[playerId].c_str();
+        }
       }
     }
   }
@@ -151,13 +168,13 @@ static void setActorShirtNameOnce(void* actor, int64_t playerId, intptr_t slide)
   *(uint8_t*)((uint8_t*)actor + 0xf94) = 1;  // Pants number display
   *(uint8_t*)((uint8_t*)actor + 0x1aaf) = 1; // Animation/step active flag
 
-  // If uniform number is already set or known, ensure state machine runs
+  // If uniform number is already set or known, only kick off state machine if not already running
   int currentUni = *(int32_t*)((uint8_t*)actor + 0x1708);
   if (currentUni <= 0 && uniNumber > 0) {
     *(int32_t*)((uint8_t*)actor + 0x1708) = uniNumber;
     currentUni = uniNumber;
   }
-  if (currentUni > 0) {
+  if (currentUni > 0 && *(int32_t*)((uint8_t*)actor + 0x1920) == 0) {
     *(int32_t*)((uint8_t*)actor + 0x1920) = 1; // State = 1 to kick off BackNumberStep
   }
 
@@ -196,6 +213,11 @@ static void nativeSetUniformNumber(void* actor, int requested) {
   if (originalSetUniformNumber) originalSetUniformNumber(actor, requested);
   if (!actor) return;
   if (requested > 0 && requested <= 99) {
+    int32_t cur = *(int32_t*)((uint8_t*)actor + 0x1708);
+    int32_t state = *(int32_t*)((uint8_t*)actor + 0x1920);
+    // DO NOT re-trigger state machine if number is already set and state machine is running or done
+    if (cur == requested && state > 0) return;
+
     *(int32_t*)((uint8_t*)actor + 0x1708) = requested;
     *(int32_t*)((uint8_t*)actor + 0x1920) = 1; // State = 1 to kick off BackNumberStep
     *(uint8_t*)((uint8_t*)actor + 0xf44) = 1;  // Back number display flag

@@ -721,12 +721,6 @@ static NSURLSession* onlineSession() {
 }
 + (BOOL)canInitWithRequest:(NSURLRequest*)request {
   if (shouldHandleURL(request.URL)) return YES;
-  if (request.URL) {
-    NSString* scheme = request.URL.scheme.lowercaseString;
-    if ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"]) {
-      ZLog(@"[REAL_NET] Unhandled network request: %@ %@", request.HTTPMethod ?: @"GET", request.URL.absoluteString);
-    }
-  }
   return NO;
 }
 + (NSURLRequest*)canonicalRequestForRequest:(NSURLRequest*)request { return request; }
@@ -1025,7 +1019,7 @@ static void hookSetPreferredFrameRateRange(CADisplayLink* self, SEL _cmd, CAFram
   float maxFps = (float)UIScreen.mainScreen.maximumFramesPerSecond;
   if (maxFps < 60.0f) maxFps = 60.0f;
   float target = (range.preferred <= 60.0f && range.preferred > 0.0f) ? 60.0f : maxFps;
-  range.minimum = target;
+  range.minimum = (target >= 60.0f) ? 30.0f : 20.0f;
   range.maximum = target;
   range.preferred = target;
   if (gOrigSetPreferredFrameRateRange) {
@@ -2457,6 +2451,6 @@ __attribute__((constructor)) static void ziruInit() {
 
     // Preserve requested presentation and simulation cadence.
     ZLog(@"[TIMING_NATIVE] native CADisplayLink and engine tick limits retained");
-    startFpsMeter();
+    // startFpsMeter() disabled to prevent main-thread periodic I/O and CAMetalLayer nextDrawable swizzling
   }
 }
