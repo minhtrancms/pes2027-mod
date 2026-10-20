@@ -34,7 +34,7 @@ Response z27Error(const std::string& msg, const std::exception& e) {
 
 ObjP z27Teams() { return nn(loadZiruJsonAssetObject("responses/ZIRU_MATCH_TEAMS.json"))->getJSONObject("teams"); }
 
-static bool z27ApplyRealClubIdentity(int32_t tid, std::string& name, std::string& shortName) {
+bool z27ApplyRealClubIdentity(int32_t tid, std::string& name, std::string& shortName) {
   static ObjP allTeamNames = nullptr;
   static std::mutex tnMu;
   {
