@@ -1836,7 +1836,7 @@ static PESPressButton* makeButton(NSString* title, BOOL primary) {
   self.bar.clipsToBounds = YES;
   self.bar.hidden = YES;
 
-  self.onlineDownload = makeButton(@"⚡ Tải data từ Server (pes.minhgame.com)", YES);
+  self.onlineDownload = makeButton(@"Tải data từ Server", YES);
   [self.onlineDownload addTarget:self action:@selector(onOnlineDownload) forControlEvents:UIControlEventTouchUpInside];
   UILongPressGestureRecognizer* lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(promptChangeServerUrl)];
   [self.onlineDownload addGestureRecognizer:lp];
@@ -1949,7 +1949,7 @@ static PESPressButton* makeButton(NSString* title, BOOL primary) {
   self.local.hidden = self.localZip == nil;
   if (self.localZip) [self.local setTitle:[NSString stringWithFormat:@"Nhập %@", self.localZip.lastPathComponent] forState:UIControlStateNormal];
   self.status.text = @"Chưa có dữ liệu game. Bạn có thể:\n"
-                     @"1. Nhấn nút màu xanh để tải trực tiếp từ pes.minhgame.com.\n"
+                     @"1. Nhấn nút màu xanh để tải trực tiếp từ Server.\n"
                      @"2. Hoặc chọn file .zip từ Tệp / chép thư mục qua 3uTools.";
   self.detail.text = [NSString stringWithFormat:@"Bản mod %s • %@", ZIRU_MOD_VERSION, why ?: @""];
 }
@@ -2113,7 +2113,7 @@ totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
   UIApplication.sharedApplication.idleTimerDisabled = NO;
 
   UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Tải dữ liệu thất bại"
-                                                             message:[NSString stringWithFormat:@"%@\n\nHãy đảm bảo bạn đã tải file lên pes.minhgame.com hoặc kết nối Wi-Fi ổn định.", msg]
+                                                             message:[NSString stringWithFormat:@"%@\n\nHãy đảm bảo bạn đã tải file lên Server hoặc kết nối Wi-Fi ổn định.", msg]
                                                       preferredStyle:UIAlertControllerStyleAlert];
   [a addAction:[UIAlertAction actionWithTitle:@"Thử lại" style:UIAlertActionStyleDefault handler:^(UIAlertAction*) {
     [self onOnlineDownload];
