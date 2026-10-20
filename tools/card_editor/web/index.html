@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eFootball 2027 - Card Mod Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0c14;
+      --bg-card: rgba(18, 22, 36, 0.75);
+      --bg-card-border: rgba(255, 255, 255, 0.08);
+      --bg-input: rgba(10, 12, 20, 0.85);
+      --text-main: #f0f3fa;
+      --text-muted: #8b95a5;
+      --primary: #00e5ff;
+      --primary-glow: rgba(0, 229, 255, 0.35);
+      --accent-gold: #ffb800;
+      --accent-gold-glow: rgba(255, 184, 0, 0.4);
+      --accent-purple: #c084fc;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --card-epic-gradient: linear-gradient(135deg, #2b1f02 0%, #171100 40%, #3d2b02 70%, #151000 100%);
+      --card-showtime-gradient: linear-gradient(135deg, #09203f 0%, #030d18 50%, #003666 100%);
+      --card-highlight-gradient: linear-gradient(135deg, #2a0845 0%, #130024 50%, #4b1263 100%);
+      --card-normal-gradient: linear-gradient(135deg, #1f242d 0%, #0f1217 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(0, 229, 255, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 85% 70%, rgba(255, 184, 0, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 100%, rgba(192, 132, 252, 0.04) 0%, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation Bar */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(14, 17, 28, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--bg-card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #ffb800, #ff416c);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 20px;
+      color: #000;
+      box-shadow: 0 4px 15px rgba(255, 184, 0, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #fff, #ffb800, #00e5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .device-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--bg-card-border);
+    }
+
+    .device-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #718096;
+    }
+
+    .device-indicator.connected {
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0.6; transform: scale(0.95); }
+    }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-sync {
+      background: linear-gradient(135deg, #00e5ff 0%, #0077ff 100%);
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 4px 18px var(--primary-glow);
+    }
+
+    .btn-sync:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 229, 255, 0.5);
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #ffb800 0%, #ff8c00 100%);
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 4px 18px var(--accent-gold-glow);
+    }
+
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 184, 0, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--bg-card-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Main Container Layout */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr 380px;
+      gap: 20px;
+      padding: 20px;
+      flex: 1;
+      max-width: 1800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Left Column: Player Selector & List */
+    .sidebar-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: calc(100vh - 110px);
+    }
+
+    .panel-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--bg-card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 10px 12px 10px 36px;
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .player-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .player-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .player-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .player-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.02);
+      transition: all 0.2s;
+    }
+
+    .player-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateX(4px);
+    }
+
+    .player-item.active {
+      background: rgba(0, 229, 255, 0.08);
+      border-color: var(--primary);
+      box-shadow: 0 2px 12px var(--primary-glow);
+    }
+
+    .player-item-thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: #1a1e2e;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .player-item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .player-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-item-name {
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .badge-pos {
+      font-weight: 800;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #000;
+    }
+
+    .pos-CF, .pos-SS, .pos-LWF, .pos-RWF { background: #ff4757; color: #fff; }
+    .pos-AMF, .pos-CMF, .pos-LMF, .pos-RMF, .pos-DMF { background: #2ed573; color: #000; }
+    .pos-CB, .pos-LB, .pos-RB { background: #1e90ff; color: #fff; }
+    .pos-GK { background: #ffa502; color: #000; }
+
+    .player-item-ovr {
+      font-weight: 900;
+      font-size: 16px;
+      color: var(--primary);
+    }
+
+    /* Center Column: Editor Form */
+    .editor-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      height: calc(100vh - 110px);
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--bg-card-border), transparent);
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      background: var(--bg-input);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    select.form-control {
+      cursor: pointer;
+    }
+
+    /* Tabs for Stats */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--bg-card-border);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tab-btn.active {
+      color: #000;
+      background: var(--primary);
+      box-shadow: 0 2px 12px var(--primary-glow);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Stat Slider Row */
+    .stat-slider-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 60px;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+
+    .stat-slider-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+    .stat-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+    }
+
+    .stat-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary-glow);
+      transition: transform 0.1s;
+    }
+
+    .stat-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .stat-num-input {
+      background: var(--bg-input);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 14px;
+      text-align: center;
+      padding: 6px;
+      outline: none;
+    }
+
+    .stat-num-input.god { color: #ffb800; text-shadow: 0 0 8px rgba(255, 184, 0, 0.6); }
+    .stat-num-input.high { color: #00e5ff; }
+    .stat-num-input.mid { color: #10b981; }
+    .stat-num-input.low { color: #9ca3af; }
+
+    /* Skills Grid */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 8px 4px;
+    }
+
+    .skill-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--bg-card-border);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+
+    .skill-toggle:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .skill-toggle.active {
+      background: rgba(0, 229, 255, 0.12);
+      border-color: var(--primary);
+    }
+
+    .skill-toggle.showtime.active {
+      background: rgba(255, 184, 0, 0.15);
+      border-color: var(--accent-gold);
+    }
+
+    .skill-checkbox {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .skill-toggle.active .skill-checkbox {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #000;
+    }
+
+    .skill-toggle.showtime.active .skill-checkbox {
+      background: var(--accent-gold);
+      border-color: var(--accent-gold);
+      color: #000;
+    }
+
+    .skill-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    /* Right Column: Visual Card Preview */
+    .preview-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      height: calc(100vh - 110px);
+      overflow-y: auto;
+    }
+
+    /* eFootball Card Presentation */
+    .card-container {
+      perspective: 1000px;
+      margin-top: 10px;
+    }
+
+    .mod-card {
+      width: 270px;
+      height: 400px;
+      border-radius: 20px;
+      position: relative;
+      background: var(--card-epic-gradient);
+      border: 2px solid #ffb800;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 184, 0, 0.35);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .mod-card.card-EPIC {
+      background: var(--card-epic-gradient);
+      border-color: #ffb800;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 184, 0, 0.4);
+    }
+
+    .mod-card.card-SHOWTIME {
+      background: var(--card-showtime-gradient);
+      border-color: #00e5ff;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 229, 255, 0.4);
+    }
+
+    .mod-card.card-HIGHLIGHT {
+      background: var(--card-highlight-gradient);
+      border-color: #c084fc;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(192, 132, 252, 0.4);
+    }
+
+    .mod-card.card-NORMAL {
+      background: var(--card-normal-gradient);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .card-glare {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(125deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.02) 40%, transparent 60%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .card-top-bar {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 5;
+    }
+
+    .card-ovr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card-ovr {
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1;
+      color: #ffb800;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .card-pos-badge {
+      font-size: 12px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .card-type-tag {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .card-player-img {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      height: 250px;
+      object-fit: contain;
+      z-index: 2;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
+      transition: transform 0.3s ease;
+    }
+
+    .card-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.95) 100%);
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .card-player-name {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+    }
+
+    .card-stars {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      color: #ffb800;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .card-booster-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #00e5ff;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Image Dropzone */
+    .dropzone {
+      width: 100%;
+      border: 2px dashed var(--bg-card-border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.02);
+      transition: all 0.2s;
+    }
+
+    .dropzone:hover {
+      border-color: var(--primary);
+      background: rgba(0, 229, 255, 0.04);
+    }
+
+    .dropzone p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .dropzone-icon {
+      font-size: 24px;
+      color: var(--primary);
+    }
+
+    /* Integration Quick Actions */
+    .quick-actions {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .action-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .action-card-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #d1d5db;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(14, 18, 30, 0.95);
+      border: 1px solid var(--primary);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px var(--primary-glow);
+      backdrop-filter: blur(12px);
+      border-radius: 10px;
+      padding: 14px 20px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal / Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #121624;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      padding: 24px;
+      width: 480px;
+      max-width: 90vw;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .console-box {
+      background: #090b10;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #10b981;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      border-top: 3px solid var(--primary);
+      width: 18px;
+      height: 18px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">27</div>
+      <div class="brand-text">
+        <h1>eFootball 2027 Card Mod Studio</h1>
+        <p>Offline Card & Squad Editor • iOS Modding</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="device-badge">
+        <span class="device-indicator" id="deviceIndicator"></span>
+        <span id="deviceText">Checking iPhone...</span>
+      </div>
+
+      <button class="btn btn-secondary" id="btnNewPlayer">
+        <span>+</span> Thêm Cầu Thủ Mới
+      </button>
+
+      <button class="btn btn-save" id="btnSaveCard">
+        <span>💾</span> Lưu Thẻ (Save Card)
+      </button>
+
+      <button class="btn btn-sync" id="btnSyncDevice">
+        <span>🚀</span> Đồng Bộ Ra iPhone
+      </button>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="app-layout">
+    
+    <!-- Left Sidebar: Player Library -->
+    <div class="sidebar-panel">
+      <div class="panel-header">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="searchPlayer" placeholder="Tìm theo tên hoặc ID...">
+        </div>
+      </div>
+      <div class="player-list" id="playerList">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Center: Card Configuration Form -->
+    <div class="editor-panel">
+      <!-- General Info -->
+      <div>
+        <div class="section-title">Thông Tin Cơ Bản (General Info)</div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label class="form-label">Tên Cầu Thủ (Player Name)</label>
+            <input type="text" class="form-control" id="playerName" placeholder="RONALDO R9">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Player ID (e.g. 37576)</label>
+            <input type="number" class="form-control" id="playerId" placeholder="37576">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số Áo (Uniform No.)</label>
+            <input type="number" class="form-control" id="uniformNumber" min="1" max="99" value="9">
+          </div>
+        </div>
+
+        <div class="form-grid-4" style="margin-top: 14px;">
+          <div class="form-group">
+            <label class="form-label">Vị Trí (Position)</label>
+            <select class="form-control" id="playerPosition">
+              <option value="13">CF - Trung Phong</option>
+              <option value="12">SS - Tiền Đạo Lùi</option>
+              <option value="10">LWF - Cánh Trái</option>
+              <option value="11">RWF - Cánh Phải</option>
+              <option value="9">AMF - Tiền Vệ Công</option>
+              <option value="6">CMF - Tiền Vệ Trung Tâm</option>
+              <option value="7">LMF - Tiền Vệ Cánh Trái</option>
+              <option value="8">RMF - Tiền Vệ Cánh Phải</option>
+              <option value="5">DMF - Tiền Vệ Phòng Ngự</option>
+              <option value="2">CB - Trung Vệ</option>
+              <option value="3">LB - Hậu Vệ Trái</option>
+              <option value="4">RB - Hậu Vệ Phải</option>
+              <option value="1">GK - Thủ Môn</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Loại Thẻ (Card Type)</label>
+            <select class="form-control" id="cardType">
+              <option value="EPIC">EPIC (Big Time Gold)</option>
+              <option value="SHOWTIME">SHOWTIME (Special Skills)</option>
+              <option value="HIGHLIGHT">HIGHLIGHT (Purple)</option>
+              <option value="NORMAL">NORMAL (Base)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Lối Chơi (Play Style)</label>
+            <select class="form-control" id="playStyle">
+              <option value="1">Goal Poacher (Sát thủ săn bàn)</option>
+              <option value="5">Creative Playmaker (Kiến tạo sáng tạo)</option>
+              <option value="6">Prolific Winger (Cánh ghi bàn)</option>
+              <option value="9">Classic No. 10 (Số 10 cổ điển)</option>
+              <option value="10">Hole Player (Xâm nhập vòng cấm)</option>
+              <option value="11">Box-to-Box (Bao sân)</option>
+              <option value="12">Anchor Man (Mỏ neo)</option>
+              <option value="13">The Destroyer (Kẻ hủy diệt)</option>
+              <option value="15">Build Up (Phát động tấn công)</option>
+              <option value="17">Offensive Goalkeeper (TM tấn công)</option>
+              <option value="0">None / Classic</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Độ Hiếm (Rarity)</label>
+            <select class="form-control" id="cardRarity">
+              <option value="5">★★★★★ (5 Stars)</option>
+              <option value="4">★★★★ (4 Stars)</option>
+              <option value="3">★★★ (3 Stars)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-4" style="margin-top: 14px;">
+          <div class="form-group">
+            <label class="form-label">Tuổi (Age)</label>
+            <input type="number" class="form-control" id="playerAge" value="25">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Chiều Cao (cm)</label>
+            <input type="number" class="form-control" id="playerHeight" value="183">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cân Nặng (kg)</label>
+            <input type="number" class="form-control" id="playerWeight" value="78">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Chân Thuận (Foot)</label>
+            <select class="form-control" id="preferredFoot">
+              <option value="1">Chân Phải (Right)</option>
+              <option value="2">Chân Trái (Left)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Editor -->
+      <div>
+        <div class="section-title">Chỉ Số Chi Tiết (Detailed Attributes 40 - 105)</div>
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="tab-attack">Tấn Công & Sút</button>
+          <button class="tab-btn" data-tab="tab-dribble">Rê Bóng & Chuyền</button>
+          <button class="tab-btn" data-tab="tab-physical">Thể Lực & Tốc Độ</button>
+          <button class="tab-btn" data-tab="tab-defend">Phòng Ngự</button>
+          <button class="tab-btn" data-tab="tab-gk">Thủ Môn (GK)</button>
+        </div>
+
+        <!-- Attack Tab -->
+        <div class="tab-content active" id="tab-attack">
+          <div class="stat-slider-row" data-stat="offensive_awareness">
+            <span class="stat-name">Offensive Awareness (Nhận thức TC)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="95">
+            <input type="number" class="stat-num-input" min="40" max="105" value="95">
+          </div>
+          <div class="stat-slider-row" data-stat="finishing">
+            <span class="stat-name">Finishing (Dứt điểm)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="98">
+            <input type="number" class="stat-num-input" min="40" max="105" value="98">
+          </div>
+          <div class="stat-slider-row" data-stat="kicking_power">
+            <span class="stat-name">Kicking Power (Lực sút)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="94">
+            <input type="number" class="stat-num-input" min="40" max="105" value="94">
+          </div>
+          <div class="stat-slider-row" data-stat="heading">
+            <span class="stat-name">Heading (Đánh đầu)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="85">
+            <input type="number" class="stat-num-input" min="40" max="105" value="85">
+          </div>
+          <div class="stat-slider-row" data-stat="place_kicking">
+            <span class="stat-name">Place Kicking (Đá phạt)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="82">
+            <input type="number" class="stat-num-input" min="40" max="105" value="82">
+          </div>
+          <div class="stat-slider-row" data-stat="curl">
+            <span class="stat-name">Curl (Độ xoáy)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="88">
+            <input type="number" class="stat-num-input" min="40" max="105" value="88">
+          </div>
+        </div>
+
+        <!-- Dribble & Pass Tab -->
+        <div class="tab-content" id="tab-dribble">
+          <div class="stat-slider-row" data-stat="ball_control">
+            <span class="stat-name">Ball Control (Kiểm soát bóng)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="96">
+            <input type="number" class="stat-num-input" min="40" max="105" value="96">
+          </div>
+          <div class="stat-slider-row" data-stat="dribbling">
+            <span class="stat-name">Dribbling (Rê bóng)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="98">
+            <input type="number" class="stat-num-input" min="40" max="105" value="98">
+          </div>
+          <div class="stat-slider-row" data-stat="tight_possession">
+            <span class="stat-name">Tight Possession (Giữ bóng hẹp)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="95">
+            <input type="number" class="stat-num-input" min="40" max="105" value="95">
+          </div>
+          <div class="stat-slider-row" data-stat="low_pass">
+            <span class="stat-name">Low Pass (Chuyền sệt)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="88">
+            <input type="number" class="stat-num-input" min="40" max="105" value="88">
+          </div>
+          <div class="stat-slider-row" data-stat="lofted_pass">
+            <span class="stat-name">Lofted Pass (Chuyền bổng)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="82">
+            <input type="number" class="stat-num-input" min="40" max="105" value="82">
+          </div>
+        </div>
+
+        <!-- Physical & Speed Tab -->
+        <div class="tab-content" id="tab-physical">
+          <div class="stat-slider-row" data-stat="speed">
+            <span class="stat-name">Speed (Tốc độ chạy)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="99">
+            <input type="number" class="stat-num-input" min="40" max="105" value="99">
+          </div>
+          <div class="stat-slider-row" data-stat="acceleration">
+            <span class="stat-name">Acceleration (Tăng tốc)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="99">
+            <input type="number" class="stat-num-input" min="40" max="105" value="99">
+          </div>
+          <div class="stat-slider-row" data-stat="physical_contact">
+            <span class="stat-name">Physical Contact (Tì đè tranh chấp)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="88">
+            <input type="number" class="stat-num-input" min="40" max="105" value="88">
+          </div>
+          <div class="stat-slider-row" data-stat="balance">
+            <span class="stat-name">Balance (Thăng bằng)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="92">
+            <input type="number" class="stat-num-input" min="40" max="105" value="92">
+          </div>
+          <div class="stat-slider-row" data-stat="jump">
+            <span class="stat-name">Jump (Bật nhảy)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="84">
+            <input type="number" class="stat-num-input" min="40" max="105" value="84">
+          </div>
+          <div class="stat-slider-row" data-stat="stamina">
+            <span class="stat-name">Stamina (Thể lực)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="86">
+            <input type="number" class="stat-num-input" min="40" max="105" value="86">
+          </div>
+        </div>
+
+        <!-- Defending Tab -->
+        <div class="tab-content" id="tab-defend">
+          <div class="stat-slider-row" data-stat="defensive_awareness">
+            <span class="stat-name">Defensive Awareness (Nhận thức PN)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="55">
+            <input type="number" class="stat-num-input" min="40" max="105" value="55">
+          </div>
+          <div class="stat-slider-row" data-stat="tackling">
+            <span class="stat-name">Tackling (Xoạc & Cướp bóng)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="52">
+            <input type="number" class="stat-num-input" min="40" max="105" value="52">
+          </div>
+          <div class="stat-slider-row" data-stat="aggression">
+            <span class="stat-name">Aggression (Quyết liệt)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="65">
+            <input type="number" class="stat-num-input" min="40" max="105" value="65">
+          </div>
+          <div class="stat-slider-row" data-stat="defensive_engagement">
+            <span class="stat-name">Defensive Engagement (Gắn kết PN)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="50">
+            <input type="number" class="stat-num-input" min="40" max="105" value="50">
+          </div>
+        </div>
+
+        <!-- GK Tab -->
+        <div class="tab-content" id="tab-gk">
+          <div class="stat-slider-row" data-stat="gk_awareness">
+            <span class="stat-name">GK Awareness (Nhận thức TM)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="40">
+            <input type="number" class="stat-num-input" min="40" max="105" value="40">
+          </div>
+          <div class="stat-slider-row" data-stat="gk_catching">
+            <span class="stat-name">GK Catching (Bắt bóng)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="40">
+            <input type="number" class="stat-num-input" min="40" max="105" value="40">
+          </div>
+          <div class="stat-slider-row" data-stat="gk_parrying">
+            <span class="stat-name">GK Parrying (Đẩy bóng)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="40">
+            <input type="number" class="stat-num-input" min="40" max="105" value="40">
+          </div>
+          <div class="stat-slider-row" data-stat="gk_reflexes">
+            <span class="stat-name">GK Reflexes (Phản xạ TM)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="40">
+            <input type="number" class="stat-num-input" min="40" max="105" value="40">
+          </div>
+          <div class="stat-slider-row" data-stat="gk_reach">
+            <span class="stat-name">GK Reach (Tầm với TM)</span>
+            <input type="range" class="stat-slider" min="40" max="105" value="40">
+            <input type="number" class="stat-num-input" min="40" max="105" value="40">
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills Section -->
+      <div>
+        <div class="section-title">Kỹ Năng & Show Time Skills</div>
+        <div class="skills-grid" id="skillsGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Visual Card Preview & In-game Integration -->
+    <div class="preview-panel">
+      <div class="section-title" style="width: 100%;">Trực Quan Thẻ (Live Preview)</div>
+
+      <div class="card-container">
+        <div class="mod-card card-EPIC" id="cardVisual">
+          <div class="card-glare"></div>
+          
+          <div class="card-top-bar">
+            <div class="card-ovr-wrap">
+              <div class="card-ovr" id="previewOvr">99</div>
+              <div class="card-pos-badge pos-CF" id="previewPos">CF</div>
+            </div>
+            <div class="card-type-tag" id="previewType">EPIC</div>
+          </div>
+
+          <img src="/api/player/image?id=37576" class="card-player-img" id="previewPlayerImg" alt="Player Art">
+
+          <div class="card-bottom-bar">
+            <div class="card-player-name" id="previewName">RONALDO R9</div>
+            <div class="card-stars" id="previewStars">★★★★★</div>
+            <div class="card-booster-badge" id="previewBooster">⚡ BOOSTER +3 TECHNIQUE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Upload Dropzone -->
+      <div class="dropzone" id="imageDropzone">
+        <input type="file" id="imageInput" accept="image/png, image/jpeg" style="display: none;">
+        <div class="dropzone-icon">🖼️</div>
+        <div style="font-weight: 700; font-size: 13px; margin-top: 6px;">Đổi Ảnh Thẻ / Thumbnail</div>
+        <p>Kéo thả ảnh PNG vào đây hoặc nhấp để tải lên (Tự động crop chuẩn eFootball)</p>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <!-- Add to Gacha Box -->
+        <div class="action-card">
+          <div class="action-card-header">🎁 Thêm Vào Gói Quay (Gacha Box)</div>
+          <div style="display: flex; gap: 8px;">
+            <select class="form-control" id="selectGachaBox" style="flex: 1;">
+              <option value="7001">Box Mod Huyền Thoại (Zidane, R9, Özil...)</option>
+              <option value="7002">Box Highlight & Showtime Tuyển Chọn</option>
+            </select>
+            <button class="btn btn-secondary" id="btnAddBox">Thêm</button>
+          </div>
+        </div>
+
+        <!-- Add to Active Squad -->
+        <div class="action-card">
+          <div class="action-card-header">⚽ Xếp Thẳng Vào Đội Hình Chính (Squad 9)</div>
+          <div style="display: flex; gap: 8px;">
+            <select class="form-control" id="selectSquadSlot" style="flex: 1;">
+              <option value="3">Vị trí CF (Slot 3 - Tiền đạo cắm)</option>
+              <option value="2">Vị trí SS/LWF (Slot 2 - Cánh trái)</option>
+              <option value="4">Vị trí SS/RWF (Slot 4 - Cánh phải)</option>
+              <option value="5">Vị trí AMF (Slot 5 - Hộ công)</option>
+              <option value="6">Vị trí CMF (Slot 6 - Tiền vệ)</option>
+              <option value="1">Vị trí CB (Slot 1 - Trung vệ)</option>
+              <option value="0">Vị trí GK (Slot 0 - Thủ môn)</option>
+            </select>
+            <button class="btn btn-secondary" id="btnAddToSquad">Đá Chính</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sync Console Modal -->
+  <div class="modal-overlay" id="syncModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span style="display: flex; align-items: center; gap: 8px;">
+          <span class="spinner" id="modalSpinner"></span>
+          <span id="modalTitle">Đang đồng bộ ra iPhone...</span>
+        </span>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="console-box" id="modalConsole">Đang kiểm tra kết nối thiết bị qua USB...</div>
+      <button class="btn btn-secondary" id="modalBtnOk" style="align-self: flex-end; display: none;">Đóng</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">
+    <span id="toastIcon">✓</span>
+    <span id="toastMsg">Thao tác thành công!</span>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    // State
+    let currentPlayerId = "37576";
+    let allPlayers = [];
+    let currentSkills = {};
+
+    const SKILLS_DEF = [
+      { id: 70, name: "Scissors Feint", showtime: false },
+      { id: 71, name: "Double Touch", showtime: false },
+      { id: 72, name: "Flip Flap", showtime: false },
+      { id: 73, name: "Marseille Turn", showtime: false },
+      { id: 74, name: "Sombrero", showtime: false },
+      { id: 75, name: "Cross Over Turn", showtime: false },
+      { id: 76, name: "Cut Behind & Turn", showtime: false },
+      { id: 77, name: "Scotch Move", showtime: false },
+      { id: 78, name: "Heading", showtime: false },
+      { id: 79, name: "Long Range Shooting", showtime: false },
+      { id: 80, name: "Chip Shot Control", showtime: false },
+      { id: 81, name: "Long Range Curler", showtime: false },
+      { id: 82, name: "Knuckle Shot", showtime: false },
+      { id: 83, name: "Dipping Shot", showtime: false },
+      { id: 84, name: "Rising Shot", showtime: false },
+      { id: 85, name: "Acrobatic Finishing", showtime: false },
+      { id: 86, name: "Heel Trick", showtime: false },
+      { id: 87, name: "First-time Shot", showtime: false },
+      { id: 88, name: "One-touch Pass", showtime: false },
+      { id: 89, name: "Through Passing", showtime: false },
+      { id: 90, name: "Weighted Pass", showtime: false },
+      { id: 91, name: "Pinpoint Crossing", showtime: false },
+      { id: 92, name: "Outside Curler", showtime: false },
+      { id: 93, name: "No Look Pass", showtime: false },
+      { id: 94, name: "Low Lofted Pass", showtime: false },
+      { id: 95, name: "Interception", showtime: false },
+      { id: 96, name: "Man Marking", showtime: false },
+      { id: 97, name: "Blocker", showtime: false },
+      { id: 98, name: "Acrobatic Clear", showtime: false },
+      { id: 99, name: "Captaincy", showtime: false },
+      { id: 100, name: "Super-sub", showtime: false },
+      { id: 101, name: "Fighting Spirit", showtime: false },
+      { id: 102, name: "Fortress (Pháo đài)", showtime: true },
+      { id: 103, name: "Momentum Dribbling", showtime: true },
+      { id: 104, name: "Phenomenal Finishing", showtime: true },
+      { id: 105, name: "Visionary Pass", showtime: true }
+    ];
+
+    // UI Toast
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toastMsg");
+      const toastIcon = document.getElementById("toastIcon");
+      toastMsg.innerText = msg;
+      toastIcon.innerText = isError ? "⚠️" : "✓";
+      toast.style.borderColor = isError ? "var(--accent-red)" : "var(--primary)";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+
+    // Tab switcher
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        btn.classList.add("active");
+        const tabId = btn.getAttribute("data-tab");
+        document.getElementById(tabId).classList.add("active");
+      });
+    });
+
+    // Populate Skills
+    function renderSkillsGrid() {
+      const container = document.getElementById("skillsGrid");
+      container.innerHTML = "";
+      SKILLS_DEF.forEach(s => {
+        const item = document.createElement("div");
+        item.className = `skill-toggle ${s.showtime ? 'showtime' : ''} ${currentSkills[s.id] ? 'active' : ''}`;
+        item.dataset.skillId = s.id;
+        item.innerHTML = `
+          <div class="skill-checkbox">${currentSkills[s.id] ? '✓' : ''}</div>
+          <span class="skill-label">${s.name}</span>
+        `;
+        item.addEventListener("click", () => {
+          currentSkills[s.id] = !currentSkills[s.id];
+          item.classList.toggle("active", currentSkills[s.id]);
+          item.querySelector(".skill-checkbox").innerText = currentSkills[s.id] ? '✓' : '';
+        });
+        container.appendChild(item);
+      });
+    }
+
+    // Color code stats
+    function updateStatInputColor(input, val) {
+      input.classList.remove("god", "high", "mid", "low");
+      if (val >= 95) input.classList.add("god");
+      else if (val >= 85) input.classList.add("high");
+      else if (val >= 75) input.classList.add("mid");
+      else input.classList.add("low");
+    }
+
+    // Connect slider & numeric inputs
+    document.querySelectorAll(".stat-slider-row").forEach(row => {
+      const slider = row.querySelector(".stat-slider");
+      const numInput = row.querySelector(".stat-num-input");
+
+      const update = (val) => {
+        val = Math.max(40, Math.min(105, parseInt(val) || 40));
+        slider.value = val;
+        numInput.value = val;
+        updateStatInputColor(numInput, val);
+        calculateLiveOVR();
+      };
+
+      slider.addEventListener("input", (e) => update(e.target.value));
+      numInput.addEventListener("input", (e) => update(e.target.value));
+      updateStatInputColor(numInput, parseInt(numInput.value));
+    });
+
+    // Recalculate Live OVR rating
+    function calculateLiveOVR() {
+      const posSelect = document.getElementById("playerPosition");
+      const posText = posSelect.options[posSelect.selectedIndex].text.split(" - ")[0];
+      
+      const getStat = (name) => {
+        const row = document.querySelector(`.stat-slider-row[data-stat="${name}"]`);
+        return row ? parseInt(row.querySelector(".stat-slider").value) || 70 : 70;
+      };
+
+      let ovr = 85;
+      if (posText === "CF" || posText === "SS") {
+        ovr = (getStat("offensive_awareness") * 0.25) + (getStat("finishing") * 0.3) + (getStat("speed") * 0.15) + (getStat("acceleration") * 0.15) + (getStat("dribbling") * 0.15);
+      } else if (posText === "LWF" || posText === "RWF") {
+        ovr = (getStat("speed") * 0.25) + (getStat("acceleration") * 0.25) + (getStat("dribbling") * 0.25) + (getStat("finishing") * 0.15) + (getStat("low_pass") * 0.1);
+      } else if (posText === "AMF" || posText === "CMF") {
+        ovr = (getStat("ball_control") * 0.25) + (getStat("low_pass") * 0.25) + (getStat("dribbling") * 0.2) + (getStat("offensive_awareness") * 0.15) + (getStat("tight_possession") * 0.15);
+      } else if (posText === "DMF" || posText === "CB") {
+        ovr = (getStat("defensive_awareness") * 0.3) + (getStat("tackling") * 0.25) + (getStat("physical_contact") * 0.2) + (getStat("speed") * 0.15) + (getStat("stamina") * 0.1);
+      } else if (posText === "GK") {
+        ovr = (getStat("gk_awareness") * 0.25) + (getStat("gk_reflexes") * 0.3) + (getStat("gk_reach") * 0.25) + (getStat("gk_parrying") * 0.2);
+      } else {
+        ovr = (getStat("speed") * 0.3) + (getStat("acceleration") * 0.2) + (getStat("stamina") * 0.2) + (getStat("tackling") * 0.15) + (getStat("low_pass") * 0.15);
+      }
+
+      ovr = Math.max(60, Math.min(105, Math.round(ovr + 3)));
+      document.getElementById("previewOvr").innerText = ovr;
+      return ovr;
+    }
+
+    // Live preview sync
+    function syncLiveCardPreview() {
+      const name = document.getElementById("playerName").value || "PLAYER";
+      const posSelect = document.getElementById("playerPosition");
+      const pos = posSelect.options[posSelect.selectedIndex].text.split(" - ")[0];
+      const cardType = document.getElementById("cardType").value;
+      const rarity = parseInt(document.getElementById("cardRarity").value);
+
+      document.getElementById("previewName").innerText = name.toUpperCase();
+      
+      const posBadge = document.getElementById("previewPos");
+      posBadge.innerText = pos;
+      posBadge.className = `card-pos-badge pos-${pos}`;
+
+      const cardVisual = document.getElementById("cardVisual");
+      cardVisual.className = `mod-card card-${cardType}`;
+      document.getElementById("previewType").innerText = cardType;
+
+      document.getElementById("previewStars").innerText = "★".repeat(rarity);
+
+      if (cardType === "SHOWTIME") {
+        document.getElementById("previewBooster").innerText = "⚡ PHENOMENAL FINISHING";
+      } else if (cardType === "EPIC") {
+        document.getElementById("previewBooster").innerText = "⚡ BOOSTER +3 TECHNIQUE";
+      } else {
+        document.getElementById("previewBooster").innerText = "";
+      }
+
+      calculateLiveOVR();
+    }
+
+    ["playerName", "playerPosition", "cardType", "cardRarity"].forEach(id => {
+      document.getElementById(id).addEventListener("input", syncLiveCardPreview);
+      document.getElementById(id).addEventListener("change", syncLiveCardPreview);
+    });
+
+    // Check Device Status
+    async function checkDeviceStatus() {
+      try {
+        const res = await fetch("/api/device/status");
+        const data = await res.json();
+        const indicator = document.getElementById("deviceIndicator");
+        const text = document.getElementById("deviceText");
+        if (data.connected) {
+          indicator.classList.add("connected");
+          text.innerText = data.device.replace("iPhone12,3", "iPhone 11 Pro");
+        } else {
+          indicator.classList.remove("connected");
+          text.innerText = "Chưa cắm USB iPhone";
+        }
+      } catch (e) {
+        console.warn("Device check failed:", e);
+      }
+    }
+
+    // Load Player List
+    async function loadPlayers(search = "") {
+      try {
+        const res = await fetch(`/api/players?q=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        allPlayers = data.players || [];
+        renderPlayerList(allPlayers);
+      } catch (e) {
+        showToast("Không thể tải danh sách cầu thủ", true);
+      }
+    }
+
+    function renderPlayerList(players) {
+      const container = document.getElementById("playerList");
+      container.innerHTML = "";
+      players.forEach(p => {
+        const item = document.createElement("div");
+        item.className = `player-item ${p.id === currentPlayerId ? 'active' : ''}`;
+        item.innerHTML = `
+          <div class="player-item-thumb">
+            <img src="${p.thumbnail}" alt="${p.name}" onerror="this.src='/api/player/image?id=blank'">
+          </div>
+          <div class="player-item-info">
+            <div class="player-item-name">${p.name}</div>
+            <div class="player-item-meta">
+              <span class="badge-pos pos-${p.position}">${p.position}</span>
+              <span>No. ${p.uniform_number}</span>
+              <span>${p.card_type}</span>
+            </div>
+          </div>
+          <div class="player-item-ovr">${p.ovr}</div>
+        `;
+        item.addEventListener("click", () => selectPlayer(p.id));
+        container.appendChild(item);
+      });
+    }
+
+    // Select Player & Load Full Details
+    async function selectPlayer(pid) {
+      currentPlayerId = pid;
+      document.querySelectorAll(".player-item").forEach(item => {
+        item.classList.toggle("active", item.querySelector(".player-item-name").innerText === pid);
+      });
+
+      try {
+        const res = await fetch(`/api/player?id=${pid}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        document.getElementById("playerId").value = data.id;
+        document.getElementById("playerName").value = data.name;
+        document.getElementById("uniformNumber").value = data.uniform_number;
+        document.getElementById("playerPosition").value = data.position_id;
+        document.getElementById("cardType").value = data.card_type;
+        document.getElementById("playStyle").value = data.play_style;
+        document.getElementById("cardRarity").value = data.rarity;
+        document.getElementById("playerAge").value = data.age;
+        document.getElementById("playerHeight").value = data.height;
+        document.getElementById("playerWeight").value = data.weight;
+        document.getElementById("preferredFoot").value = data.preferred_foot;
+
+        // Stats
+        if (data.stats) {
+          Object.entries(data.stats).forEach(([k, v]) => {
+            const row = document.querySelector(`.stat-slider-row[data-stat="${k}"]`);
+            if (row) {
+              const slider = row.querySelector(".stat-slider");
+              const numInput = row.querySelector(".stat-num-input");
+              slider.value = v;
+              numInput.value = v;
+              updateStatInputColor(numInput, v);
+            }
+          });
+        }
+
+        // Skills
+        currentSkills = data.skills || {};
+        renderSkillsGrid();
+
+        // Card Image
+        document.getElementById("previewPlayerImg").src = `${data.thumbnail}&t=${Date.now()}`;
+
+        syncLiveCardPreview();
+      } catch (e) {
+        showToast("Lỗi tải thông tin cầu thủ: " + e.message, true);
+      }
+    }
+
+    // Save Card
+    document.getElementById("btnSaveCard").addEventListener("click", async () => {
+      const pid = document.getElementById("playerId").value.trim();
+      const name = document.getElementById("playerName").value.trim();
+      if (!pid) return showToast("Vui lòng nhập Player ID", true);
+
+      const stats = {};
+      document.querySelectorAll(".stat-slider-row").forEach(row => {
+        const key = row.dataset.stat;
+        const val = parseInt(row.querySelector(".stat-slider").value) || 70;
+        stats[key] = val;
+      });
+
+      const payload = {
+        id: pid,
+        name: name,
+        position_id: parseInt(document.getElementById("playerPosition").value),
+        card_type: document.getElementById("cardType").value,
+        play_style: parseInt(document.getElementById("playStyle").value),
+        rarity: parseInt(document.getElementById("cardRarity").value),
+        uniform_number: parseInt(document.getElementById("uniformNumber").value),
+        age: parseInt(document.getElementById("playerAge").value),
+        height: parseInt(document.getElementById("playerHeight").value),
+        weight: parseInt(document.getElementById("playerWeight").value),
+        preferred_foot: parseInt(document.getElementById("preferredFoot").value),
+        stats: stats,
+        skills: currentSkills,
+        booster_id: 1
+      };
+
+      try {
+        const res = await fetch("/api/player/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast(`✓ Đã lưu thành công thẻ ${name}!`);
+          loadPlayers(document.getElementById("searchPlayer").value);
+        } else {
+          showToast(resData.error || "Lỗi lưu thẻ", true);
+        }
+      } catch (e) {
+        showToast("Lỗi kết nối server: " + e.message, true);
+      }
+    });
+
+    // Add Player to Gacha Box
+    document.getElementById("btnAddBox").addEventListener("click", async () => {
+      const pid = parseInt(document.getElementById("playerId").value.trim());
+      const boxId = parseInt(document.getElementById("selectGachaBox").value);
+      if (!pid) return showToast("Chưa chọn cầu thủ", true);
+
+      try {
+        const res = await fetch("/api/boxes/add_player", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ player_id: pid, box_id: boxId })
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast(`✓ Đã thêm cầu thủ vào Box ID ${boxId}!`);
+        } else {
+          showToast(resData.error || "Lỗi thêm vào Box", true);
+        }
+      } catch (e) {
+        showToast("Lỗi kết nối server: " + e.message, true);
+      }
+    });
+
+    // Assign Player to Squad 9
+    document.getElementById("btnAddToSquad").addEventListener("click", async () => {
+      const pid = parseInt(document.getElementById("playerId").value.trim());
+      const uni = parseInt(document.getElementById("uniformNumber").value) || 9;
+      const slot = parseInt(document.getElementById("selectSquadSlot").value);
+      if (!pid) return showToast("Chưa chọn cầu thủ", true);
+
+      try {
+        const res = await fetch("/api/squad/add_starter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ player_id: pid, uniform_number: uni, slot: slot })
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          showToast(`✓ Đã xếp cầu thủ đá chính Slot ${slot}!`);
+        } else {
+          showToast(resData.error || "Lỗi xếp đội hình", true);
+        }
+      } catch (e) {
+        showToast("Lỗi kết nối server: " + e.message, true);
+      }
+    });
+
+    // 1-Click Sync to iPhone USB
+    document.getElementById("btnSyncDevice").addEventListener("click", async () => {
+      const modal = document.getElementById("syncModal");
+      const title = document.getElementById("modalTitle");
+      const consoleBox = document.getElementById("modalConsole");
+      const spinner = document.getElementById("modalSpinner");
+      const btnOk = document.getElementById("modalBtnOk");
+
+      modal.classList.add("show");
+      title.innerText = "Đang đồng bộ ra iPhone...";
+      spinner.style.display = "block";
+      btnOk.style.display = "none";
+      consoleBox.innerText = "Bắt đầu cập nhật ZIRU_PLAYER_RECORDS và database save game...\nĐang kết nối qua cáp USB...";
+
+      try {
+        const res = await fetch("/api/device/sync", { method: "POST" });
+        const resData = await res.json();
+        spinner.style.display = "none";
+        btnOk.style.display = "block";
+
+        if (resData.success) {
+          title.innerText = "✓ Đồng bộ thành công!";
+          consoleBox.innerText += "\n" + (resData.log || "Hoàn tất chuyển file vào app PES2027 trên iPhone!");
+          showToast("Đã đồng bộ xong dữ liệu ra iPhone!");
+        } else {
+          title.innerText = "⚠️ Đồng bộ thất bại";
+          consoleBox.innerText += "\nLỖI: " + (resData.error || resData.log || "Không xác định");
+          showToast("Đồng bộ gặp lỗi!", true);
+        }
+      } catch (e) {
+        spinner.style.display = "none";
+        btnOk.style.display = "block";
+        title.innerText = "⚠️ Lỗi kết nối";
+        consoleBox.innerText += "\nLỗi fetch API: " + e.message;
+      }
+    });
+
+    document.getElementById("modalClose").addEventListener("click", () => document.getElementById("syncModal").classList.remove("show"));
+    document.getElementById("modalBtnOk").addEventListener("click", () => document.getElementById("syncModal").classList.remove("show"));
+
+    // Image Upload Handling
+    const dropzone = document.getElementById("imageDropzone");
+    const fileInput = document.getElementById("imageInput");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "var(--primary)";
+    });
+
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.style.borderColor = "var(--bg-card-border)";
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = "var(--bg-card-border)";
+      if (e.dataTransfer.files.length > 0) {
+        uploadImage(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        uploadImage(e.target.files[0]);
+      }
+    });
+
+    async function uploadImage(file) {
+      const pid = document.getElementById("playerId").value.trim();
+      if (!pid) return showToast("Vui lòng chọn hoặc nhập Player ID trước", true);
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Data = reader.result;
+        try {
+          showToast("Đang xử lý và tải ảnh lên...");
+          const res = await fetch("/api/player/upload_image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: pid, image: base64Data })
+          });
+          const resData = await res.json();
+          if (resData.success) {
+            document.getElementById("previewPlayerImg").src = `${resData.thumbnail}`;
+            showToast("✓ Đã cập nhật ảnh thẻ mới!");
+            loadPlayers(document.getElementById("searchPlayer").value);
+          } else {
+            showToast(resData.error || "Lỗi tải ảnh", true);
+          }
+        } catch (e) {
+          showToast("Lỗi upload: " + e.message, true);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // New Player Button
+    document.getElementById("btnNewPlayer").addEventListener("click", () => {
+      const newId = Math.floor(1000000 + Math.random() * 9000000).toString();
+      document.getElementById("playerId").value = newId;
+      document.getElementById("playerName").value = "CUSTOM LEGEND";
+      document.getElementById("uniformNumber").value = "10";
+      document.getElementById("playerPosition").value = "13";
+      document.getElementById("cardType").value = "EPIC";
+      document.getElementById("playStyle").value = "1";
+      document.getElementById("cardRarity").value = "5";
+      document.getElementById("previewPlayerImg").src = "/api/player/image?id=blank";
+      currentSkills = { "71": true, "104": true };
+      renderSkillsGrid();
+      syncLiveCardPreview();
+      showToast("Đã tạo mẫu thẻ mới! Tùy chỉnh chỉ số rồi nhấn 'Lưu Thẻ'.");
+    });
+
+    // Search filter
+    let searchDebounce;
+    document.getElementById("searchPlayer").addEventListener("input", (e) => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => loadPlayers(e.target.value), 250);
+    });
+
+    // Init
+    window.addEventListener("DOMContentLoaded", () => {
+      renderSkillsGrid();
+      loadPlayers();
+      selectPlayer("37576"); // Default R9
+      checkDeviceStatus();
+      setInterval(checkDeviceStatus, 6000);
+    });
+  </script>
+</body>
+</html>

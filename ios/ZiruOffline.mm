@@ -1710,10 +1710,11 @@ static BOOL dataReady(NSString** why) {
 @end
 
 // ---------------------------------------------------------------- ZiruImportVC
-@interface ZiruImportVC : UIViewController <UIDocumentPickerDelegate>
+@interface ZiruImportVC : UIViewController <UIDocumentPickerDelegate, NSURLSessionDownloadDelegate>
 @property(nonatomic, strong) UILabel* status;
 @property(nonatomic, strong) UILabel* detail;
 @property(nonatomic, strong) UIProgressView* bar;
+@property(nonatomic, strong) PESPressButton* onlineDownload;
 @property(nonatomic, strong) PESPressButton* pick;
 @property(nonatomic, strong) PESPressButton* local;
 @property(nonatomic, strong) PESPressButton* rescan;
@@ -1721,6 +1722,12 @@ static BOOL dataReady(NSString** why) {
 @property(nonatomic, strong) UILabel* watermarkLabel;
 @property(nonatomic, copy) NSString* localZip;
 @property(atomic) BOOL busy;
+@property(nonatomic, strong) NSURLSession* dlSession;
+@property(nonatomic, strong) NSURLSessionDownloadTask* dlTask;
+@property(nonatomic) int64_t lastBytesWritten;
+@property(nonatomic) CFAbsoluteTime lastSpeedSampleTime;
+@property(nonatomic) double currentSpeedMBs;
+@property(nonatomic) int64_t totalBytesExpected;
 @end
 
 @implementation ZiruImportVC
@@ -1835,11 +1842,16 @@ static PESPressButton* makeButton(NSString* title, BOOL primary) {
   self.bar.clipsToBounds = YES;
   self.bar.hidden = YES;
 
-  self.rescan = makeButton(@"Quét thư mục data (3uTools / Tệp)", YES);
-  [self.rescan addTarget:self action:@selector(onRescan) forControlEvents:UIControlEventTouchUpInside];
+  self.onlineDownload = makeButton(@"⚡ Tải data từ Server (pes.minhgame.com)", YES);
+  [self.onlineDownload addTarget:self action:@selector(onOnlineDownload) forControlEvents:UIControlEventTouchUpInside];
+  UILongPressGestureRecognizer* lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(promptChangeServerUrl)];
+  [self.onlineDownload addGestureRecognizer:lp];
 
   self.pick = makeButton(@"Chọn file (.zip) từ Tệp", NO);
   [self.pick addTarget:self action:@selector(onPick) forControlEvents:UIControlEventTouchUpInside];
+
+  self.rescan = makeButton(@"Quét thư mục data (3uTools)", NO);
+  [self.rescan addTarget:self action:@selector(onRescan) forControlEvents:UIControlEventTouchUpInside];
 
   self.local = makeButton(@"Nhập file .zip trong Documents", NO);
   [self.local addTarget:self action:@selector(onLocal) forControlEvents:UIControlEventTouchUpInside];
@@ -1874,7 +1886,7 @@ static PESPressButton* makeButton(NSString* title, BOOL primary) {
     [self.watermarkLabel.trailingAnchor constraintEqualToAnchor:wmContainer.trailingAnchor constant:-14],
   ]];
 
-  UIStackView* btnStack = [[UIStackView alloc] initWithArrangedSubviews:@[self.rescan, self.pick, self.local]];
+  UIStackView* btnStack = [[UIStackView alloc] initWithArrangedSubviews:@[self.onlineDownload, self.pick, self.rescan, self.local]];
   btnStack.axis = UILayoutConstraintAxisVertical;
   btnStack.alignment = UIStackViewAlignmentFill;
   btnStack.spacing = 8;
@@ -1943,9 +1955,181 @@ static PESPressButton* makeButton(NSString* title, BOOL primary) {
   self.local.hidden = self.localZip == nil;
   if (self.localZip) [self.local setTitle:[NSString stringWithFormat:@"Nhập %@", self.localZip.lastPathComponent] forState:UIControlStateNormal];
   self.status.text = @"Chưa có dữ liệu game. Bạn có thể:\n"
-                     @"1. Dùng 3uTools chép thẳng thư mục data (pak, cpk, Download, livedata) vào app.\n"
-                     @"2. Hoặc chọn file .zip từ app Tệp để giải nén.";
+                     @"1. Nhấn nút màu xanh để tải trực tiếp từ pes.minhgame.com.\n"
+                     @"2. Hoặc chọn file .zip từ Tệp / chép thư mục qua 3uTools.";
   self.detail.text = [NSString stringWithFormat:@"Bản mod %s • %@", ZIRU_MOD_VERSION, why ?: @""];
+}
+
+- (void)promptChangeServerUrl {
+  NSString* cur = [[NSUserDefaults standardUserDefaults] stringForKey:@"pes2027_custom_asset_server"] ?: @"https://pes.minhgame.com";
+  UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Cấu hình Máy Chủ Asset"
+                                                             message:@"Nhập địa chỉ Web Server / CDN chứa file PES2027-data.zip:"
+                                                      preferredStyle:UIAlertControllerStyleAlert];
+  [a addTextFieldWithConfigurationHandler:^(UITextField* tf) {
+    tf.text = cur;
+    tf.placeholder = @"https://pes.minhgame.com";
+  }];
+  [a addAction:[UIAlertAction actionWithTitle:@"Lưu & Tải" style:UIAlertActionStyleDefault handler:^(UIAlertAction*) {
+    NSString* newUrl = a.textFields.firstObject.text;
+    if (newUrl.length) {
+      [[NSUserDefaults standardUserDefaults] setObject:newUrl forKey:@"pes2027_custom_asset_server"];
+      [[NSUserDefaults standardUserDefaults] synchronize];
+      [self onOnlineDownload];
+    }
+  }]];
+  [a addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
+  [self presentViewController:a animated:YES completion:nil];
+}
+
+- (void)onOnlineDownload {
+  [self checkTamper];
+  if (self.busy) return;
+
+  uint64_t freeMem = freeBytes();
+  if (freeMem < 3ULL * 1024 * 1024 * 1024) {
+    UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Bộ nhớ còn lại không đủ"
+      message:[NSString stringWithFormat:@"iPhone của bạn chỉ còn %.1f GB trống. Cần tối thiểu 3.5 GB trống để tải và giải nén gói tài nguyên.", freeMem / (1024.0 * 1024.0 * 1024.0)]
+      preferredStyle:UIAlertControllerStyleAlert];
+    [a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:a animated:YES completion:nil];
+    return;
+  }
+
+  NSString* serverUrl = [[NSUserDefaults standardUserDefaults] stringForKey:@"pes2027_custom_asset_server"] ?: @"https://pes.minhgame.com";
+  self.busy = YES;
+  self.bar.hidden = NO;
+  self.bar.progress = 0;
+  self.status.text = [NSString stringWithFormat:@"Đang kết nối tới máy chủ %@...", serverUrl];
+  self.detail.text = @"Kiểm tra thông tin bản cập nhật...";
+  self.onlineDownload.enabled = NO;
+  self.pick.enabled = NO;
+  self.rescan.enabled = NO;
+  self.local.enabled = NO;
+
+  UIApplication.sharedApplication.idleTimerDisabled = YES;
+
+  NSString* trimmedServer = [serverUrl stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"/"]];
+  NSString* verUrlStr = [NSString stringWithFormat:@"%@/version.json", trimmedServer];
+  NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:verUrlStr] cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:5.0];
+
+  NSURLSessionDataTask* checkTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData* data, NSURLResponse* resp, NSError* err) {
+    NSString* targetZipUrl = [NSString stringWithFormat:@"%@/PES2027-data.zip", trimmedServer];
+    if (!err && data.length > 0) {
+      NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+      if ([dict isKindOfClass:[NSDictionary class]] && dict[@"data_url"]) {
+        targetZipUrl = dict[@"data_url"];
+      }
+    }
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self startDownloadFromUrl:targetZipUrl];
+    });
+  }];
+  [checkTask resume];
+}
+
+- (void)startDownloadFromUrl:(NSString*)urlStr {
+  NSURL* u = [NSURL URLWithString:urlStr];
+  if (!u) {
+    [self handleDownloadError:@"URL tải về không hợp lệ."];
+    return;
+  }
+  self.status.text = @"Đang tải dữ liệu từ máy chủ...";
+  self.detail.text = urlStr.lastPathComponent;
+  self.lastBytesWritten = 0;
+  self.lastSpeedSampleTime = CFAbsoluteTimeGetCurrent();
+  self.currentSpeedMBs = 0;
+  self.totalBytesExpected = 0;
+
+  NSURLSessionConfiguration* config = [NSURLSessionConfiguration defaultSessionConfiguration];
+  config.timeoutIntervalForRequest = 60.0;
+  config.timeoutIntervalForResource = 3600.0;
+  self.dlSession = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:[NSOperationQueue mainQueue]];
+  self.dlTask = [self.dlSession downloadTaskWithURL:u];
+  [self.dlTask resume];
+}
+
+- (void)URLSession:(NSURLSession*)session downloadTask:(NSURLSessionDownloadTask*)downloadTask
+      didWriteData:(int64_t)bytesWritten
+ totalBytesWritten:(int64_t)totalBytesWritten
+totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
+  self.totalBytesExpected = totalBytesExpectedToWrite;
+  CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+  double dt = now - self.lastSpeedSampleTime;
+  if (dt >= 0.5) {
+    int64_t bytesDiff = totalBytesWritten - self.lastBytesWritten;
+    self.currentSpeedMBs = (bytesDiff / (1024.0 * 1024.0)) / dt;
+    self.lastBytesWritten = totalBytesWritten;
+    self.lastSpeedSampleTime = now;
+  }
+
+  float progress = totalBytesExpectedToWrite > 0 ? (float)((double)totalBytesWritten / (double)totalBytesExpectedToWrite) : 0;
+  self.bar.progress = progress;
+
+  double writtenMB = totalBytesWritten / (1024.0 * 1024.0);
+  double totalMB = totalBytesExpectedToWrite / (1024.0 * 1024.0);
+
+  NSString* etaStr = @"";
+  if (self.currentSpeedMBs > 0.05 && totalBytesExpectedToWrite > totalBytesWritten) {
+    int remainingSec = (int)((totalMB - writtenMB) / self.currentSpeedMBs);
+    if (remainingSec >= 60) {
+      etaStr = [NSString stringWithFormat:@" • Còn ~%d phút %d giây", remainingSec / 60, remainingSec % 60];
+    } else {
+      etaStr = [NSString stringWithFormat:@" • Còn ~%d giây", remainingSec];
+    }
+  }
+
+  self.status.text = [NSString stringWithFormat:@"Đang tải: %.1f / %.1f MB (%.0f%%)\nTốc độ: %.1f MB/s%@",
+                      writtenMB, totalMB > 0 ? totalMB : 0, progress * 100.0, self.currentSpeedMBs, etaStr];
+}
+
+- (void)URLSession:(NSURLSession*)session downloadTask:(NSURLSessionDownloadTask*)downloadTask didFinishDownloadingToURL:(NSURL*)location {
+  NSString* targetZip = [gDocs stringByAppendingPathComponent:@"PES2027-data.zip"];
+  NSFileManager* fm = [NSFileManager defaultManager];
+  if ([fm fileExistsAtPath:targetZip]) {
+    [fm removeItemAtPath:targetZip error:nil];
+  }
+  NSError* mvErr = nil;
+  if (![fm moveItemAtURL:location toURL:[NSURL fileURLWithPath:targetZip] error:&mvErr]) {
+    [self handleDownloadError:[NSString stringWithFormat:@"Không thể lưu file tải về: %@", mvErr.localizedDescription]];
+    return;
+  }
+
+  self.status.text = @"Tải xong! Đang tự động giải nén và cài đặt...";
+  self.bar.progress = 0;
+
+  [self importPath:targetZip done:^{
+    [fm removeItemAtPath:targetZip error:nil];
+  }];
+}
+
+- (void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task didCompleteWithError:(NSError*)error {
+  if (error && error.code != NSURLErrorCancelled) {
+    [self handleDownloadError:[NSString stringWithFormat:@"Lỗi kết nối máy chủ (%ld): %@", (long)error.code, error.localizedDescription]];
+  }
+}
+
+- (void)handleDownloadError:(NSString*)msg {
+  self.busy = NO;
+  self.bar.hidden = YES;
+  self.onlineDownload.enabled = YES;
+  self.pick.enabled = YES;
+  self.rescan.enabled = YES;
+  self.local.enabled = YES;
+  UIApplication.sharedApplication.idleTimerDisabled = NO;
+
+  UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Tải dữ liệu thất bại"
+                                                             message:[NSString stringWithFormat:@"%@\n\nHãy đảm bảo bạn đã tải file lên pes.minhgame.com hoặc kết nối Wi-Fi ổn định.", msg]
+                                                      preferredStyle:UIAlertControllerStyleAlert];
+  [a addAction:[UIAlertAction actionWithTitle:@"Thử lại" style:UIAlertActionStyleDefault handler:^(UIAlertAction*) {
+    [self onOnlineDownload];
+  }]];
+  [a addAction:[UIAlertAction actionWithTitle:@"Đổi URL Server" style:UIAlertActionStyleDefault handler:^(UIAlertAction*) {
+    [self promptChangeServerUrl];
+  }]];
+  [a addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
+  [self presentViewController:a animated:YES completion:nil];
+  [self refresh];
 }
 
 - (void)onRescan {
