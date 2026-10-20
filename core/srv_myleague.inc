@@ -16,6 +16,7 @@ Response handleZiruGetMyclubPlayerData(const std::optional<Bytes>& b) {
       ArrP params;
       if (j > 0) {
         ziruTargetRecruitPid = j;
+        sp("almanac_state").edit().putLong("last_target_recruit", j).commit();
         int64_t restoredJ = z27RestorePlayerId(nullptr, j, j2, 0);
         if (restoredJ != j) j = restoredJ;
         w = getZiruPlayerWrapper(Value((long long)j), false);

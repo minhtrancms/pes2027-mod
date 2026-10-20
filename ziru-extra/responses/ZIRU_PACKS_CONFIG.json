@@ -7,15 +7,23 @@
   ],
   "packs": [
     {
+      "pack_id": "mod_legends",
+      "agent_id": 7001,
+      "title": "ZIRU MOD LEGENDS: ZIDANE, R9 & ÖZIL",
+      "category": "epic",
+      "player_ids": [
+        9901397,
+        37576,
+        40291
+      ]
+    },
+    {
       "agent_id": 1368,
       "pack_id": "epic_1",
       "title": "ZIRU LEGENDS: RONALDO R9 & ZIDANE",
       "category": "epic",
       "base_count": 148,
       "player_ids": [
-        37576,
-        9901397,
-        40291,
         88045755964133,
         88045755960841,
         89131308848867,
@@ -173,9 +181,6 @@
       "category": "epic",
       "base_count": 145,
       "player_ids": [
-        40291,
-        37576,
-        9901397,
         87962004024416,
         88039581945312,
         88029649698868,
@@ -330,9 +335,6 @@
       "category": "epic",
       "base_count": 145,
       "player_ids": [
-        37576,
-        40291,
-        9901397,
         88029649836778,
         88040387251713,
         88031797317109,
@@ -487,9 +489,6 @@
       "category": "epic",
       "base_count": 145,
       "player_ids": [
-        40291,
-        37576,
-        9901397,
         88029918268922,
         87963883146746,
         88033139475625,
@@ -644,9 +643,6 @@
       "category": "epic",
       "base_count": 145,
       "player_ids": [
-        40291,
-        37576,
-        9901397,
         88036092153518,
         88035555413452,
         88033139494339,
@@ -801,9 +797,6 @@
       "category": "epic",
       "base_count": 145,
       "player_ids": [
-        40291,
-        37576,
-        9901397,
         88036360585371,
         88035823848941,
         89131308848867,
@@ -1112,8 +1105,8 @@
     {
       "agent_id": 1374,
       "pack_id": "showtime_1",
-      "title": "ZIRU SHOW TIME: PRIME STARS",
-      "category": "showtime",
+      "title": "SHOW TIME: PRIME STARS",
+      "category": "show_time",
       "base_count": 131,
       "player_ids": [
         106773692395554,
@@ -1252,8 +1245,8 @@
     {
       "agent_id": 6201,
       "pack_id": "showtime_2",
-      "title": "ZIRU SHOW TIME: GAME CHANGERS",
-      "category": "showtime",
+      "title": "SHOW TIME: GAME CHANGERS",
+      "category": "show_time",
       "base_count": 132,
       "player_ids": [
         106743627624500,
@@ -1393,8 +1386,8 @@
     {
       "agent_id": 6202,
       "pack_id": "showtime_3",
-      "title": "ZIRU SHOW TIME: ELITE FINISHERS",
-      "category": "showtime",
+      "title": "SHOW TIME: ELITE FINISHERS",
+      "category": "show_time",
       "base_count": 132,
       "player_ids": [
         106742016943293,
@@ -1534,8 +1527,8 @@
     {
       "agent_id": 6203,
       "pack_id": "showtime_4",
-      "title": "ZIRU SHOW TIME: DEFENSIVE WALL",
-      "category": "showtime",
+      "title": "HIGHLIGHT: DEFENSIVE WALL",
+      "category": "highlight",
       "base_count": 131,
       "player_ids": [
         106764917945800,
@@ -1674,8 +1667,8 @@
     {
       "agent_id": 6204,
       "pack_id": "showtime_5",
-      "title": "ZIRU SHOW TIME: RISING STARS",
-      "category": "showtime",
+      "title": "HIGHLIGHT: RISING STARS",
+      "category": "highlight",
       "base_count": 131,
       "player_ids": [
         106740943281173,

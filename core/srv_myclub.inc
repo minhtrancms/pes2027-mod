@@ -95,7 +95,22 @@ void applyZiruDynamicRecruit(const ObjP& jo) {
         }
         ziruTargetRecruitPid = 0;
       } else {
-        removed = remaining->remove(0);
+        int64_t lastTarget = prefs.getLong("last_target_recruit", 0);
+        int targetIdx = -1;
+        if (lastTarget > 0) {
+          for (int idx = 0; idx < remaining->length(); idx++) {
+            int64_t cand = remaining->optLong(idx, 0);
+            if (cand == lastTarget || (cand & 0xFFFFFF) == (lastTarget & 0xFFFFFF)) {
+              targetIdx = idx;
+              break;
+            }
+          }
+        }
+        if (targetIdx >= 0) {
+          removed = remaining->remove(targetIdx);
+        } else {
+          removed = remaining->remove(0);
+        }
       }
       ObjP w = getZiruPlayerWrapper(removed, true);
       if (!w) {

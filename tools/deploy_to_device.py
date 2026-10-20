@@ -109,23 +109,37 @@ async def main():
         print("\n--- 3. Pushing 3D face models & mod texture packs into Documents/pak ---")
         pak_source = WORKSPACE_ROOT / "assets_data" / "PES2027-data" / "pak"
         pak_files_to_push = [
-            "pc3700_mobile_ios.pak",
-            "pc3700_mobile_ios.utoc",
-            "pc3700_mobile_ios.ucas",
-            "pc0101_mobile_ios.pak",
-            "pc0101_mobile_ios.utoc",
-            "pc0101_mobile_ios.ucas",
-            "global_mobile_ios.utoc",
-            "global_mobile_ios.ucas",
+            (pak_source / "pc3700_mobile_ios.pak", "Documents/pak/pc3700_mobile_ios.pak"),
+            (pak_source / "pc3700_mobile_ios.utoc", "Documents/pak/pc3700_mobile_ios.utoc"),
+            (pak_source / "pc3700_mobile_ios.ucas", "Documents/pak/pc3700_mobile_ios.ucas"),
+            (pak_source / "pc3700_mobile_and.pak", "Documents/pak/pc3700_mobile_and.pak"),
+            (pak_source / "pc3700_mobile_and.utoc", "Documents/pak/pc3700_mobile_and.utoc"),
+            (pak_source / "pc3700_mobile_and.ucas", "Documents/pak/pc3700_mobile_and.ucas"),
+            (pak_source / "pc0101_mobile_ios.pak", "Documents/pak/pc0101_mobile_ios.pak"),
+            (pak_source / "pc0101_mobile_ios.utoc", "Documents/pak/pc0101_mobile_ios.utoc"),
+            (pak_source / "pc0101_mobile_ios.ucas", "Documents/pak/pc0101_mobile_ios.ucas"),
+            (pak_source / "global_mobile_ios.utoc", "Documents/pak/global_mobile_ios.utoc"),
+            (pak_source / "global_mobile_ios.ucas", "Documents/pak/global_mobile_ios.ucas"),
+            (WORKSPACE_ROOT / "ziru-extra/pak_extra/pc7999_mobile_ios.pak", "Documents/pak/pc7999_mobile_ios.pak"),
+            (WORKSPACE_ROOT / "ziru-extra/pak_extra/pc7999_mobile_ios.utoc", "Documents/pak/pc7999_mobile_ios.utoc"),
+            (WORKSPACE_ROOT / "ziru-extra/pak_extra/pc7999_mobile_ios.ucas", "Documents/pak/pc7999_mobile_ios.ucas"),
+            (WORKSPACE_ROOT / "ziru-extra/pak_extra/pc8000_mobile_ios.pak", "Documents/pak/pc8000_mobile_ios.pak"),
+            (WORKSPACE_ROOT / "ziru-extra/pak_extra/pc8000_mobile_ios.utoc", "Documents/pak/pc8000_mobile_ios.utoc"),
+            (WORKSPACE_ROOT / "ziru-extra/pak_extra/pc8000_mobile_ios.ucas", "Documents/pak/pc8000_mobile_ios.ucas"),
         ]
-        for pf in pak_files_to_push:
-            lp = pak_source / pf
-            rp = f"Documents/pak/{pf}"
+        for lp, rp in pak_files_to_push:
+            if not lp.exists():
+                continue
             if await service.exists(rp):
                 st = await service.stat(rp)
                 if st.get("st_size") == lp.stat().st_size:
-                    print(f"[SKIP] {pf} already exists on device with matching size ({lp.stat().st_size} bytes).")
+                    print(f"[SKIP] {lp.name} already exists on device with matching size ({lp.stat().st_size} bytes).")
                     continue
+                else:
+                    try:
+                        await service.rm(rp)
+                    except Exception:
+                        pass
             await push_file_safe(service, lp, rp)
 
         print("\n=======================================================")

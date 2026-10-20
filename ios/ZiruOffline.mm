@@ -577,23 +577,18 @@ static BOOL shouldHandleURL(NSURL* url) {
   if (!host) return NO;
   NSString* scheme = url.scheme.lowercaseString;
   if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) return NO;
+  if ([url.path hasPrefix:@"/banner/"] || [url.path hasPrefix:@"/prd/banner/"]) return YES;
   if ([host isEqualToString:@"127.0.0.1"] && url.port.intValue == 8085) return YES;
   if ([host isEqualToString:@"ntl.service.konami.net"]) return YES;                 // GateInfo.php
   if ([host isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"]) return YES;          // livedata CDN in CmdLogin
   return NO;
 }
 
-// Konami CDN images (pack/agent banners: /prd/banner/agent/<id>/<sha256>, campaign art ...). Ziru's responses point at
-// d1ln4m3c7n87ju.cloudfront.net/prd/...; the Android build fetches them from the real CDN, the local server has none
-// (404 -> packs show without pictures). Serve them from PESmobile.app/ziru/cdn/<path> or the on-device cache
-// Documents/PES2027-cache/cdn/<path>; otherwise fetch once from the CDN (when online) and keep a copy for offline use.
+// Konami CDN images (pack/agent banners: /prd/banner/agent/<id>/<sha256>, event banners, campaign art ...).
 static BOOL isCdnAssetURL(NSURL* url) {
   if (![url.path hasPrefix:@"/prd/"] && ![url.path hasPrefix:@"/banner/"]) return NO;
   if ([url.path rangeOfString:@".."].location != NSNotFound) return NO;
-  NSString* h = url.host.lowercaseString;
-  return [h isEqualToString:@"d1ln4m3c7n87ju.cloudfront.net"] ||
-         [h isEqualToString:@"127.0.0.1"] ||
-         [h isEqualToString:@"localhost"];
+  return YES;
 }
 static NSString* cdnCachePath(NSURL* url) {
   return [[gDocs stringByAppendingPathComponent:@"PES2027-cache/cdn"] stringByAppendingPathComponent:url.path];
@@ -762,16 +757,41 @@ static NSData* bodyOf(NSURLRequest* r) {
 
 - (void)loadCdnAsset {
   NSURL* url = self.request.URL;
-  NSString* bundled = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:url.path];
-  NSString* bundledResp = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:url.path];
+  NSString* p = url.path;
+  if ([p hasPrefix:@"/prd/"]) p = [p substringFromIndex:4];
+  NSString* bundled = [[gBundleAssets stringByAppendingPathComponent:@"cdn"] stringByAppendingPathComponent:p];
+  NSString* bundledResp = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:p];
   NSString* cached = cdnCachePath(url);
-  for (NSString* f in @[ bundled, bundledResp, cached ]) {
+  for (NSString* f in @[ bundledResp, bundled, cached ]) {
     NSData* d = [NSData dataWithContentsOfFile:f];
     if (d.length) {
       ZLog(@"[CDN] %@ -> %@ (%lu bytes)", url.path, f == bundled ? @"bundle/cdn" : (f == bundledResp ? @"bundle/responses" : @"cache"), (unsigned long)d.length);
       [self finishWithStatus:200 headers:@{@"Content-Type" : cdnMime(d), @"Content-Length" : [NSString stringWithFormat:@"%lu", (unsigned long)d.length]} data:d];
       return;
     }
+  }
+
+  // Folder fallback for tournament/event/agent banners
+  NSString* parentDir = bundledResp.stringByDeletingLastPathComponent;
+  NSArray* dirContents = [NSFileManager.defaultManager contentsOfDirectoryAtPath:parentDir error:nil];
+  for (NSString* fn in dirContents) {
+    if (![fn hasPrefix:@"."]) {
+      NSString* cand = [parentDir stringByAppendingPathComponent:fn];
+      NSData* d = [NSData dataWithContentsOfFile:cand];
+      if (d.length > 500) {
+        ZLog(@"[CDN_LOCAL_EVENT] %@ -> local fallback %@ (%lu bytes)", url.path, fn, (unsigned long)d.length);
+        [self finishWithStatus:200 headers:@{@"Content-Type" : cdnMime(d), @"Content-Length" : [NSString stringWithFormat:@"%lu", (unsigned long)d.length]} data:d];
+        return;
+      }
+    }
+  }
+
+  // Generic fallback if available locally
+  NSString* genericBanner = [[gBundleAssets stringByAppendingPathComponent:@"responses"] stringByAppendingPathComponent:@"offline_pack_banner.png"];
+  NSData* genData = [NSData dataWithContentsOfFile:genericBanner];
+  if (genData.length) {
+    [self finishWithStatus:200 headers:@{@"Content-Type" : @"image/png", @"Content-Length" : [NSString stringWithFormat:@"%lu", (unsigned long)genData.length]} data:genData];
+    return;
   }
   CFRunLoopRef rl = CFRunLoopGetCurrent();
   NSURL* cdnRealUrl = [NSURL URLWithString:[@"https://d1ln4m3c7n87ju.cloudfront.net" stringByAppendingString:url.path]];
