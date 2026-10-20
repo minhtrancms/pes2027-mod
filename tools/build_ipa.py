@@ -124,6 +124,21 @@ PATCHES = [
     (0x100911448, 0x397C4268, 0x52800028, "APlayerActor::SetUniformName: ldrb w8,[x19,#0xf10] -> mov w8, #1"),
     (0x100911450, 0x54001881, 0xD503201F, "APlayerActor::SetUniformName: b.ne -> nop"),
 
+    # SetUniformNumber (0x10089f2e8): bypass all LOD/capture guards straight to number store and state=1
+    (0x10089F2E8, 0xB950B808, 0x1400000D, "SetUniformNumber: bypass guards -> b 0x10089f31c"),
+
+    # SetUniformBackNumber (0x100895c30): force back number rendering on jersey material
+    (0x100895C68, 0x397D1268, 0x52800028, "SetUniformBackNumber: ldrb w8,[x19,#0xf44] -> mov w8, #1"),
+    (0x100895C74, 0x54000441, 0xD503201F, "SetUniformBackNumber: b.ne -> nop"),
+
+    # SetUniformFrontNumber (0x100895d98): force front number rendering
+    (0x100895DD0, 0x397DB268, 0x52800028, "SetUniformFrontNumber: ldrb w8,[x19,#0xf6c] -> mov w8, #1"),
+    (0x100895DDC, 0x54000461, 0xD503201F, "SetUniformFrontNumber: b.ne -> nop"),
+
+    # SetUniformPantsNumber (0x10089610c): force pants number rendering
+    (0x100896144, 0x397E5268, 0x52800028, "SetUniformPantsNumber: ldrb w8,[x19,#0xf94] -> mov w8, #1"),
+    (0x100896150, 0x54000461, 0xD503201F, "SetUniformPantsNumber: b.ne -> nop"),
+
     # Unlock selectable real stadiums in all match modes (Authentic, Exhibition, Tour, etc.)
     (0x104892B08, 0x540003A1, 0xD503201F, "GetSelectableStadium: b.ne -> nop"),
 ]
