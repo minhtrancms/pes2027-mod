@@ -1,85 +1,21 @@
-// Native name-atlas fallback and jersey rendering, PESmobile 11.1.101 only.
+// Native name and jersey rendering, PESmobile 11.1.101 only.
 #include <atomic>
 #include <mutex>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <mach-o/dyld.h>
 #include <mach/mach.h>
 #include <unistd.h>
 
 namespace zjersey {
-using LoadFn = void (*)(void*);
-using ReadyFn = bool (*)(void*);
-using DrawFn = void (*)(void*, void*);
-struct NativeString { char16_t* data; int32_t num; int32_t max; };
-using AssetFn = void (*)(void*, NativeString*, bool);
 using SetUniformNumberFn = void (*)(void* actor, int uniformNumber);
 using SetupFromPlayerIdFn = void (*)(void* actor, int64_t playerId, void* path, int uniformIndex, void* uniName);
 
-static LoadFn originalLoad;
-static ReadyFn originalReady;
-static DrawFn originalDraw;
-static AssetFn originalAsset;
 static SetUniformNumberFn originalSetUniformNumber;
 static SetupFromPlayerIdFn originalSetupFromPlayerId;
-
-static void* gRetriedActors[64];
-static std::atomic<size_t> gRetriedCount{0};
-static void asset(void* actor, NativeString* name, bool edit) { originalAsset(actor, name, edit); }
 static intptr_t gSlide = 0;
 
-static void load(void* actor) {
-  originalLoad(actor);
-}
-
-static bool ready(void* actor) {
-  if (!originalReady(actor)) return false;
-  auto p = (uint8_t*)actor;
-  if (!*(void**)(p + 0x2b0)) {
-    // Check if we already retried this actor without any mutex or heap allocations
-    bool alreadyRetried = false;
-    size_t count = gRetriedCount.load(std::memory_order_relaxed);
-    for (size_t i = 0; i < count && i < 64; ++i) {
-      if (gRetriedActors[i] == actor) { alreadyRetried = true; break; }
-    }
-    if (!alreadyRetried && count < 64) {
-      gRetriedActors[count] = actor;
-      gRetriedCount.fetch_add(1, std::memory_order_relaxed);
-
-      auto assetStr = (NativeString*)(p + 0x2c0);
-      static const char16_t fbName[]  = u"T_EditUni_FontName_00_D";
-      static const char16_t fbBack[]  = u"T_EditUni_FontBack_00_D";
-      static const char16_t fbFront[] = u"T_EditUni_FontFront_00_D";
-      static const char16_t fbPants[] = u"T_EditUni_FontPants_00_D";
-
-      const char16_t* target = fbBack;
-      int tlen = (int)(sizeof(fbBack) / sizeof(char16_t));
-      if (assetStr && assetStr->data && assetStr->num > 0) {
-        std::u16string a(assetStr->data, assetStr->num);
-        if (a.find(u"FontName") != std::u16string::npos) {
-          target = fbName; tlen = (int)(sizeof(fbName) / sizeof(char16_t));
-        } else if (a.find(u"FontFront") != std::u16string::npos) {
-          target = fbFront; tlen = (int)(sizeof(fbFront) / sizeof(char16_t));
-        } else if (a.find(u"FontPants") != std::u16string::npos) {
-          target = fbPants; tlen = (int)(sizeof(fbPants) / sizeof(char16_t));
-        } else {
-          target = fbBack; tlen = (int)(sizeof(fbBack) / sizeof(char16_t));
-        }
-      }
-      NativeString sStr{(char16_t*)target, tlen, tlen};
-      originalAsset(actor, &sStr, true);
-      originalLoad(actor);
-      return false;
-    }
-  }
-  return true;
-}
-
-static void draw(void* actor, void* canvas) {
-  originalDraw(actor, canvas);
-}
-
-#include <unordered_map>
 static std::unordered_map<int64_t, std::string> gNameCache;
 static std::mutex gCacheMu;
 
@@ -137,10 +73,9 @@ static void setActorShirtNameOnce(void* actor, int64_t playerId, intptr_t slide)
   if (!actor) return;
 
   const char* pName = nullptr;
-  int uniNumber = 0;
-  if (playerId == 9901397) { pName = "ZIDANE"; uniNumber = 10; }
-  else if (playerId == 37576) { pName = "RONALDO"; uniNumber = 9; }
-  else if (playerId == 40291) { pName = "ÖZIL"; uniNumber = 11; }
+  if (playerId == 9901397) { pName = "ZIDANE"; }
+  else if (playerId == 37576) { pName = "RONALDO"; }
+  else if (playerId == 40291) { pName = "ÖZIL"; }
   else if (playerId > 0) {
     pName = lookupPlayerShirtName(playerId, slide);
   }
@@ -156,27 +91,14 @@ static void setActorShirtNameOnce(void* actor, int64_t playerId, intptr_t slide)
     }
   }
 
-  // Enable all Name & Number flags on actor
+  // Enable Name display and animation step on actor (do NOT override number flags or force FrontNumber)
   uint8_t* p = (uint8_t*)actor + 0x1000;
   p[0xaa7] = 1;
   p[0xaaa] = 1;
   p[0xaab] = 1;
   p[0xaaf] = 1;
   *(uint8_t*)((uint8_t*)actor + 0xf10) = 1;  // Uniform name display
-  *(uint8_t*)((uint8_t*)actor + 0xf44) = 1;  // Back number display
-  *(uint8_t*)((uint8_t*)actor + 0xf6c) = 1;  // Front number display
-  *(uint8_t*)((uint8_t*)actor + 0xf94) = 1;  // Pants number display
   *(uint8_t*)((uint8_t*)actor + 0x1aaf) = 1; // Animation/step active flag
-
-  // If uniform number is already set or known, only kick off state machine if not already running
-  int currentUni = *(int32_t*)((uint8_t*)actor + 0x1708);
-  if (currentUni <= 0 && uniNumber > 0) {
-    *(int32_t*)((uint8_t*)actor + 0x1708) = uniNumber;
-    currentUni = uniNumber;
-  }
-  if (currentUni > 0 && *(int32_t*)((uint8_t*)actor + 0x1920) == 0) {
-    *(int32_t*)((uint8_t*)actor + 0x1920) = 1; // State = 1 to kick off BackNumberStep
-  }
 
   // Ensure Scale X, Scale Y, and Font Scale are non-zero (default 1.0f)
   if (*(float*)((uint8_t*)actor + 0xf38) <= 0.01f) *(float*)((uint8_t*)actor + 0xf38) = 1.0f;
@@ -210,24 +132,14 @@ static void hookedSetupFromPlayerId(void* actor, int64_t playerId, void* path, i
 }
 
 static void nativeSetUniformNumber(void* actor, int requested) {
+  // Let the native game engine handle setting the uniform number cleanly according to the club kit rules
   if (originalSetUniformNumber) originalSetUniformNumber(actor, requested);
   if (!actor) return;
   if (requested > 0 && requested <= 99) {
-    int32_t cur = *(int32_t*)((uint8_t*)actor + 0x1708);
-    int32_t state = *(int32_t*)((uint8_t*)actor + 0x1920);
-
-    *(int32_t*)((uint8_t*)actor + 0x1708) = requested;
-    *(uint8_t*)((uint8_t*)actor + 0xf44) = 1;  // Back number display flag
-    *(uint8_t*)((uint8_t*)actor + 0xf6c) = 1;  // Front number display flag
-    *(uint8_t*)((uint8_t*)actor + 0xf94) = 1;  // Pants number display flag
-    *(uint8_t*)((uint8_t*)actor + 0xf10) = 1;  // Uniform name display flag
-    *(uint8_t*)((uint8_t*)actor + 0x1aaf) = 1; // Step active flag
     uint8_t* p = (uint8_t*)actor + 0x1000;
     p[0xaa7] = 1; p[0xaaa] = 1; p[0xaab] = 1; p[0xaaf] = 1;
-
-    if (state == 0 || cur != requested) {
-      *(int32_t*)((uint8_t*)actor + 0x1920) = 1; // State = 1 to kick off BackNumberStep
-    }
+    *(uint8_t*)((uint8_t*)actor + 0xf10) = 1;  // Uniform name display flag
+    *(uint8_t*)((uint8_t*)actor + 0x1aaf) = 1; // Step active flag
   }
 }
 
@@ -257,36 +169,7 @@ static void install() {
     }
   }
 
-  // 2. Install atlas fallback hooks with per-canvas fallback (FontBack, FontFront, FontPants, FontName)
-  const uintptr_t slots[] = {0x105f177f8, 0x105f17800, 0x105f17808, 0x105f17818};
-  const uintptr_t functions[] = {0x100851490, 0x100851894, 0x1008518c0, 0x1008511c8};
-  bool vtableMatch = true;
-  for (int i = 0; i < 4; ++i) {
-    uintptr_t cur = *(uintptr_t*)(slots[i] + slide);
-    uintptr_t unslid = (cur >= (uintptr_t)slide) ? (cur - (uintptr_t)slide) : cur;
-    if (cur != functions[i] + slide && (unslid & 0xFFFFFFULL) != (functions[i] & 0xFFFFFFULL)) {
-      vtableMatch = false; break;
-    }
-  }
-  if (!vtableMatch) {
-    ZLog(@"[JERSEY] unsupported native vtable; hooks disabled"); return;
-  }
-  vm_address_t page = (slots[0] + slide) & ~(vm_address_t)(psize - 1);
-  vm_size_t length = slots[3] + slide + 8 - page;
-  if (vm_protect(mach_task_self(), page, length, false, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY) == KERN_SUCCESS ||
-      vm_protect(mach_task_self(), page, length, false, VM_PROT_READ | VM_PROT_WRITE) == KERN_SUCCESS) {
-    originalLoad = (LoadFn)*(uintptr_t*)(slots[0] + slide);
-    originalReady = (ReadyFn)*(uintptr_t*)(slots[1] + slide);
-    originalDraw = (DrawFn)*(uintptr_t*)(slots[2] + slide);
-    originalAsset = (AssetFn)*(uintptr_t*)(slots[3] + slide);
-    *(uintptr_t*)(slots[0] + slide) = (uintptr_t)load;
-    *(uintptr_t*)(slots[1] + slide) = (uintptr_t)ready;
-    *(uintptr_t*)(slots[2] + slide) = (uintptr_t)draw;
-    *(uintptr_t*)(slots[3] + slide) = (uintptr_t)asset;
-    vm_protect(mach_task_self(), page, length, false, VM_PROT_READ);
-  }
-
-  // 3. SetUniformNumber hook at real vtable slots (APlayerActorMobile & APlayerActorMobileHigh)
+  // 2. SetUniformNumber hook at real vtable slots (APlayerActorMobile & APlayerActorMobileHigh)
   const uintptr_t numSlots[] = {0x105f286c0ULL, 0x105f29098ULL};
   const uintptr_t expectedSetNum = 0x10089f2e8ULL;
   for (uintptr_t slot : numSlots) {
@@ -302,6 +185,6 @@ static void install() {
       }
     }
   }
-  ZLog(@"[JERSEY_NATIVE] jersey name & uniform number hooks active (zero match overhead)");
+  ZLog(@"[JERSEY_NATIVE] jersey name & uniform number hooks active (zero match overhead, native font pipeline)");
 }
 }

@@ -1052,10 +1052,13 @@ ObjP z27Home(const ObjP& active) {
       continue;
     }
     if (!p) continue;
+    int squadUni = pl->getJSONObject(i)->optInt("uniform_number", 0);
+    int pUni = p->optInt("uniform_number", 0);
+    int finalUni = (squadUni > 0) ? squadUni : ((pUni > 0) ? pUni : (i + 1));
     ObjP pObj = newObj()->put("gameplayer_id", z27Copy(gid))
                        ->put("parameters", Array::parse(p->getJSONArray("parameters")->toString()))
                        ->put("averaged_overall", 0)
-                       ->put("uniform_number", p->optInt("uniform_number", pl->getJSONObject(i)->optInt("uniform_number", i + 1)));
+                       ->put("uniform_number", finalUni);
     ArrP ib = p->optJSONArray("initial_booster_id_list");
     if (ib) pObj->put("initial_booster_id_list", Array::parse(ib->toString()));
     ArrP sk = p->optJSONArray("additional_skill_id");
@@ -1191,10 +1194,12 @@ ObjP z27AwaySquad(const ObjP& active) {
     for (int i = 0; i < players->length(); i++) {
       ObjP p = players->getJSONObject(i);
       ObjP gid = p->getJSONObject("gameplayer_id");
+      int uni = p->optInt("uniform_number", 0);
+      if (uni <= 0) uni = i + 1;
       ObjP pObj = newObj()->put("gameplayer_id", z27Copy(gid))
                          ->put("parameters", Array::parse(p->getJSONArray("parameters")->toString()))
                          ->put("averaged_overall", 0)
-                         ->put("uniform_number", p->optInt("uniform_number", i + 1));
+                         ->put("uniform_number", uni);
       ArrP ps = p->optJSONArray("play_style");
       if (ps) pObj->put("play_style", Array::parse(ps->toString()));
       playerList->put(pObj);
@@ -1222,7 +1227,8 @@ inline void z27SyncMatchJerseyPlayers(const ObjP& homeSquad, const ObjP& awaySqu
           if (!p) continue;
           ObjP gid = p->optJSONObject("gameplayer_id");
           int64_t pid = gid ? gid->optLong("id", 0) : 0;
-          int uni = p->optInt("uniform_number", i + 1);
+          int uni = p->optInt("uniform_number", 0);
+          if (uni <= 0) uni = i + 1;
           if (pid > 0 && uni > 0) {
             zjersey::registerMatchPlayer(0, homeTid, uni, pid);
           }
@@ -1238,7 +1244,8 @@ inline void z27SyncMatchJerseyPlayers(const ObjP& homeSquad, const ObjP& awaySqu
           if (!p) continue;
           ObjP gid = p->optJSONObject("gameplayer_id");
           int64_t pid = gid ? gid->optLong("id", 0) : 0;
-          int uni = p->optInt("uniform_number", i + 1);
+          int uni = p->optInt("uniform_number", 0);
+          if (uni <= 0) uni = i + 1;
           if (pid > 0 && uni > 0) {
             zjersey::registerMatchPlayer(1, awayTid, uni, pid);
           }
