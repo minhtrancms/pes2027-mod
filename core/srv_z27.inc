@@ -1043,8 +1043,15 @@ ObjP z27Home(const ObjP& active) {
   ArrP pl = sq->getJSONArray("player_list");
   ArrP out = newArr();
   for (int i = 0; i < pl->length(); i++) {
-    ObjP gid = pl->getJSONObject(i)->getJSONObject("gameplayer_id");
-    ObjP p = z27Player(gid);
+    ObjP gid = pl->getJSONObject(i)->optJSONObject("gameplayer_id");
+    if (!gid || gid->optLong("id", 0) <= 0) continue;
+    ObjP p = nullptr;
+    try {
+      p = z27Player(gid);
+    } catch (...) {
+      continue;
+    }
+    if (!p) continue;
     ObjP pObj = newObj()->put("gameplayer_id", z27Copy(gid))
                        ->put("parameters", Array::parse(p->getJSONArray("parameters")->toString()))
                        ->put("averaged_overall", 0)
