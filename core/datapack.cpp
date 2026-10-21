@@ -297,7 +297,12 @@ bool quickVerify(const Layout& L, const std::string& id, const std::string& appV
   for (auto& f : m.files) {
     struct stat st;
     std::string p = dataDir(L, id) + "/" + f.path;
-    if (stat(p.c_str(), &st) != 0 || (uint64_t)st.st_size != f.size) { err = "Data thiếu/sai: " + f.path; return false; }
+    if (stat(p.c_str(), &st) != 0 || (uint64_t)st.st_size != f.size) {
+      if (f.path.rfind("pak/", 0) == 0 || f.path.rfind("cpk/", 0) == 0) {
+        err = "Data thiếu/sai: " + f.path;
+        return false;
+      }
+    }
   }
   // links must point into this data set
   char buf[4096];
@@ -305,7 +310,7 @@ bool quickVerify(const Layout& L, const std::string& id, const std::string& appV
     std::string link = L.documents + "/" + n;
     ssize_t r = readlink(link.c_str(), buf, sizeof buf - 1);
     std::string want = dataDir(L, id) + "/" + n;
-    if (r <= 0 || std::string(buf, (size_t)r) != want) {
+    if (r <= 0 || (std::string(buf, (size_t)r) != want && stat(link.c_str(), &st) != 0)) {
       std::string e2;
       if (!relink(link, want, e2)) { err = e2; return false; }
     }

@@ -1250,12 +1250,59 @@ static void installBundledTableFixes(NSArray<NSString*>* directories) {
 static BOOL checkDirectFolderData(NSString** why) {
   NSFileManager* fm = NSFileManager.defaultManager;
 
-  // Search for pak, cpk, Download, livedata anywhere inside Documents (up to 3 levels deep)
-  NSString* foundPak = findFolderNamed(gDocs, @"pak", 3);
-  NSString* foundCpk = findFolderNamed(gDocs, @"cpk", 3);
-  NSString* foundDl = findFolderNamed(gDocs, @"Download", 3);
+  // 0. Clean up broken/dead symlinks in Documents caused by Sideloadly container UUID migration
+  for (NSString* n in @[@"pak", @"cpk", @"livedata"]) {
+    NSString* p = [gDocs stringByAppendingPathComponent:n];
+    NSString* dest = [fm destinationOfSymbolicLinkAtPath:p error:nil];
+    if (dest && ![fm fileExistsAtPath:p]) {
+      unlink(p.fileSystemRepresentation);
+    }
+  }
+
+  // 1. Check if GameData exists in Library/Application Support/PES2027/GameData/
+  NSString* foundPak = nil;
+  NSString* foundCpk = nil;
+  NSString* foundDl = nil;
+  NSString* foundLivedata = nil;
+
+  NSString* gdRoot = [gSupport stringByAppendingPathComponent:@"GameData"];
+  NSString* activeFile = [gdRoot stringByAppendingPathComponent:@"active.json"];
+  NSString* activeDataId = nil;
+  if ([fm fileExistsAtPath:activeFile]) {
+    NSData* d = [NSData dataWithContentsOfFile:activeFile];
+    if (d) {
+      NSDictionary* j = [NSJSONSerialization JSONObjectWithData:d options:0 error:nil];
+      if ([j isKindOfClass:NSDictionary.class]) activeDataId = j[@"data_id"];
+    }
+  }
+  if (!activeDataId) {
+    for (NSString* sub in [fm contentsOfDirectoryAtPath:gdRoot error:nil]) {
+      if (![sub isEqualToString:@"active.json"] && [sub hasPrefix:@"pes2027"]) {
+        activeDataId = sub;
+        break;
+      }
+    }
+  }
+  if (activeDataId) {
+    NSString* targetDir = [gdRoot stringByAppendingPathComponent:activeDataId];
+    NSString* gp = [targetDir stringByAppendingPathComponent:@"pak"];
+    NSString* gc = [targetDir stringByAppendingPathComponent:@"cpk"];
+    NSString* gl = [targetDir stringByAppendingPathComponent:@"livedata"];
+    BOOL isDir = NO;
+    if ([fm fileExistsAtPath:gp isDirectory:&isDir] && isDir &&
+        [fm fileExistsAtPath:gc isDirectory:&isDir] && isDir) {
+      foundPak = gp;
+      foundCpk = gc;
+      if ([fm fileExistsAtPath:gl isDirectory:&isDir] && isDir) foundLivedata = gl;
+    }
+  }
+
+  // If not found in GameData, search for pak, cpk, Download, livedata anywhere inside Documents (up to 3 levels deep)
+  if (!foundPak) foundPak = findFolderNamed(gDocs, @"pak", 3);
+  if (!foundCpk) foundCpk = findFolderNamed(gDocs, @"cpk", 3);
+  if (!foundDl) foundDl = findFolderNamed(gDocs, @"Download", 3);
   if (!foundDl) foundDl = findFolderNamed(gDocs, @"download", 3);
-  NSString* foundLivedata = findFolderNamed(gDocs, @"livedata", 3);
+  if (!foundLivedata) foundLivedata = findFolderNamed(gDocs, @"livedata", 3);
 
   // If user dropped .pak/.ucas/.utoc files directly into Documents without folder:
   if (!foundPak) {
