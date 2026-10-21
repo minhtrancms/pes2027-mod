@@ -1111,25 +1111,47 @@ ArrP z27SavedKits(int32_t sq) {
 }
 
 ArrP z27AwayKits(const ObjP& active, const ObjP& homeUniform) {
+  if (!active || !homeUniform) return nullptr;
   ObjP ht = z27Team(active->getJSONObject("home")->getInt("base_team_id"));
   ObjP at = z27Team(active->getJSONObject("away")->getInt("base_team_id"));
-  int first = homeUniform->getJSONArray("uniform_list")->getInt(0);
-  ArrP rgb;
-  ArrP hk = ht->getJSONArray("kits"), ak = at->getJSONArray("kits");
-  for (int i = 0; i < hk->length(); i++)
-    if (hk->getJSONObject(i)->getInt("id") == first) rgb = hk->getJSONObject(i)->getJSONArray("shirt_rgb");
+  if (!at) return nullptr;
+  ArrP ak = at->optJSONArray("kits");
+  if (!ak || ak->length() == 0) return nullptr;
+  ArrP huList = homeUniform->optJSONArray("uniform_list");
+  int first = (huList && huList->length() > 0) ? huList->optInt(0, 0) : 0;
+  ArrP rgb = nullptr;
+  ArrP hk = ht ? ht->optJSONArray("kits") : nullptr;
+  if (hk) {
+    for (int i = 0; i < hk->length(); i++) {
+      ObjP k = hk->optJSONObject(i);
+      if (k && k->optInt("id", 0) == first) { rgb = k->optJSONArray("shirt_rgb"); break; }
+    }
+    if (!rgb && hk->length() > 0 && hk->optJSONObject(0)) rgb = hk->optJSONObject(0)->optJSONArray("shirt_rgb");
+  }
+  if (!rgb) {
+    ArrP out = newArr();
+    for (int i = 0; i < ak->length(); i++) {
+      if (ak->optJSONObject(i)) out->put(ak->optJSONObject(i)->optInt("id", 0));
+    }
+    return out;
+  }
   int best = -1, bi = 0;
   for (int i = 0; i < ak->length(); i++) {
-    ArrP c = ak->getJSONObject(i)->getJSONArray("shirt_rgb");
+    ObjP k = ak->optJSONObject(i);
+    ArrP c = k ? k->optJSONArray("shirt_rgb") : nullptr;
+    if (!c || c->length() < 3) continue;
     int d = 0;
-    for (int k = 0; k < 3; k++) {
-      int x = c->getInt(k) - nn(rgb)->getInt(k);
-      d = x * x + d;
+    for (int idx = 0; idx < 3; idx++) {
+      int x = c->optInt(idx, 0) - rgb->optInt(idx, 0);
+      d += x * x;
     }
     if (d > best) { best = d; bi = i; }
   }
-  ArrP out = newArr()->put(ak->getJSONObject(bi)->getInt("id"));
-  for (int i = 0; i < ak->length(); i++) if (i != bi) out->put(ak->getJSONObject(i)->getInt("id"));
+  ArrP out = newArr();
+  if (ak->optJSONObject(bi)) out->put(ak->optJSONObject(bi)->optInt("id", 0));
+  for (int i = 0; i < ak->length(); i++) {
+    if (i != bi && ak->optJSONObject(i)) out->put(ak->optJSONObject(i)->optInt("id", 0));
+  }
   return out;
 }
 
@@ -1187,7 +1209,11 @@ ObjP z27AwaySquad(const ObjP& active) {
   int awayTeamId = active->getJSONObject("away")->getInt("base_team_id");
   awaySquad->put("team_id", awayTeamId);
   awaySquad->put("base_team", newArr()->put(active->getJSONObject("away")));
-  awaySquad->put("coach", z27Copy(coach));
+  if (coach) {
+    awaySquad->put("coach", z27Copy(coach));
+  } else {
+    awaySquad->put("coach", newObj()->put("coach_id", newObj()->put("id", 17608292273375LL)->put("serial", 359042717000000009LL)));
+  }
 
   ArrP playerList = newArr();
   if (players) {
@@ -1291,8 +1317,12 @@ Response z27Start() {
     z27SyncMatchJerseyPlayers(act->getJSONObject("home_squad"), awaySquad);
     ObjP ci = out->optJSONObject("commentary_info");
     if (ci) ci->put("pre_division", act->getInt("division"));
+    std::string coachStr = "unknown";
+    if (home && home->optJSONObject("coach") && home->getJSONObject("coach")->optJSONObject("coach_id")) {
+      coachStr = home->getJSONObject("coach")->getJSONObject("coach_id")->toString();
+    }
     logRequest("ZIRU_MATCH_START", "game=" + str(gid) + " squad=" + str(mainId) + " coach=" +
-        home->getJSONObject("coach")->getJSONObject("coach_id")->toString() + " reused=" + str(reuse) + " division=" + str(act->getInt("division")) + " cpu=" + act->getString("cpu_level"));
+        coachStr + " reused=" + str(reuse) + " division=" + str(act->getInt("division")) + " cpu=" + act->getString("cpu_level"));
     return serveObjectAsEncryptedMsgPack(out);
   } catch (const std::exception& e) {
     return z27Error("CMD_START_GAME", e);
