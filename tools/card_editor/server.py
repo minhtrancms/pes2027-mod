@@ -948,9 +948,10 @@ class CardEditorHandler(BaseHTTPRequestHandler):
                         item["type"] = card_type
                         found_cl = True
                         break
-                if found_cl:
-                    with open(cmd_login_file, "w", encoding="utf-8") as f:
-                        json.dump(cl_data, f, ensure_ascii=False)
+                if not found_cl:
+                    gp_list.append(updated_record["gameplayer"])
+                with open(cmd_login_file, "w", encoding="utf-8") as f:
+                    json.dump(cl_data, f, ensure_ascii=False)
         except Exception as e:
             print(f"[WARN] Failed to update CmdLogin.json: {e}")
 
