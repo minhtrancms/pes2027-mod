@@ -341,6 +341,17 @@ int main() {
       check(rma->getString("team_name_short") == "RMA", "RMA short code restored");
       auto mci = s.z27Team(173);
       check(mci->getString("team_name") == "Manchester City", "Manchester City identity restored");
+
+      // Verify multi-formation and two play styles
+      auto sq = s.z27Squad(s.z27Main());
+      auto sgp = sq->getJSONObject("squad_gameplan");
+      check(sgp->getJSONObject("match_plan_settings")->getInt("use_multi_tactics_plan") == 1, "use_multi_tactics_plan is 1");
+      auto forms = sgp->optJSONArray("formation");
+      if (forms) {
+        for (int fi = 0; fi < forms->length(); fi++) {
+          check(forms->getJSONObject(fi)->getString("use_multi_formation") == "YES", "use_multi_formation is YES");
+        }
+      }
     }
     std::filesystem::remove_all(root);
     std::cout << "PASS: gameplay, booster layout, all 72 skill mappings/roundtrip/training/skill-zero restart, CREATE_USER resume, D1 migration, failed writes, Neymar restoration and abrupt-exit persistence\n";

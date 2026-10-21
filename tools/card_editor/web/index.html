@@ -1036,19 +1036,49 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Lối Chơi (Play Style)</label>
+            <label class="form-label">Style Tấn Công (Offensive Style)</label>
             <select class="form-control" id="playStyle">
               <option value="1">Goal Poacher (Sát thủ săn bàn)</option>
+              <option value="2">Dummy Runner (Di chuyển thu hút)</option>
+              <option value="3">Fox in the Box (Kẻ săn bàn vòng cấm)</option>
+              <option value="4">Target Man (Tiền đạo mục tiêu)</option>
               <option value="5">Creative Playmaker (Kiến tạo sáng tạo)</option>
               <option value="6">Prolific Winger (Cánh ghi bàn)</option>
+              <option value="7">Roaming Flank (Cánh bó trong)</option>
+              <option value="8">Cross Specialist (Chuyên gia tạt bóng)</option>
               <option value="9">Classic No. 10 (Số 10 cổ điển)</option>
               <option value="10">Hole Player (Xâm nhập vòng cấm)</option>
               <option value="11">Box-to-Box (Bao sân)</option>
               <option value="12">Anchor Man (Mỏ neo)</option>
               <option value="13">The Destroyer (Kẻ hủy diệt)</option>
+              <option value="14">Orchestrator (Nhạc trưởng)</option>
               <option value="15">Build Up (Phát động tấn công)</option>
-              <option value="17">Offensive Goalkeeper (TM tấn công)</option>
+              <option value="16">Extra Frontman (Hậu vệ dâng cao)</option>
+              <option value="17">Offensive Full-back (Hậu vệ biên tấn công)</option>
+              <option value="18">Full-back Finisher (Hậu vệ biên dứt điểm)</option>
+              <option value="19">Defensive Full-back (Hậu vệ biên phòng ngự)</option>
+              <option value="20">Offensive Goalkeeper (TM tấn công)</option>
+              <option value="21">Defensive Goalkeeper (TM phòng ngự)</option>
+              <option value="22">Deep-Lying Forward (Tiền đạo lùi sâu)</option>
               <option value="0">None / Classic</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Style Phòng Thủ (Defensive Style)</label>
+            <select class="form-control" id="defensivePlayStyle">
+              <option value="0">Tự động theo vị trí (Auto)</option>
+              <option value="23">Press Back (Lùi về áp sát)</option>
+              <option value="24">Counter Target (Mục tiêu phản công)</option>
+              <option value="25">Cover Shadow (Chặn bóng trung tuyến)</option>
+              <option value="26">Outlet Forward (Tiền đạo đón bóng dài)</option>
+              <option value="27">Hard Worker (Cầu thủ chăm chỉ)</option>
+              <option value="28">Lane Blocker (Chặn hành lang biên)</option>
+              <option value="29">Wide Stopper (Chặn bóng dạt cánh)</option>
+              <option value="30">Line Controller (Chỉ huy hàng thủ / Bẫy việt vị)</option>
+              <option value="31">Zone Anchor (Mỏ neo khu vực)</option>
+              <option value="32">Last Line (Chốt chặn cuối cùng)</option>
+              <option value="33">Sweeper GK (Thủ môn quét)</option>
             </select>
           </div>
 
@@ -1603,6 +1633,7 @@
         document.getElementById("playerPosition").value = data.position_id;
         document.getElementById("cardType").value = data.card_type;
         document.getElementById("playStyle").value = data.play_style;
+        document.getElementById("defensivePlayStyle").value = data.defensive_play_style || "0";
         document.getElementById("cardRarity").value = data.rarity;
         document.getElementById("playerAge").value = data.age;
         document.getElementById("playerHeight").value = data.height;
@@ -1655,6 +1686,7 @@
         position_id: parseInt(document.getElementById("playerPosition").value),
         card_type: document.getElementById("cardType").value,
         play_style: parseInt(document.getElementById("playStyle").value),
+        defensive_play_style: parseInt(document.getElementById("defensivePlayStyle").value || "0"),
         rarity: parseInt(document.getElementById("cardRarity").value),
         uniform_number: parseInt(document.getElementById("uniformNumber").value),
         age: parseInt(document.getElementById("playerAge").value),
@@ -1838,6 +1870,7 @@
       document.getElementById("playerPosition").value = "13";
       document.getElementById("cardType").value = "EPIC";
       document.getElementById("playStyle").value = "1";
+      document.getElementById("defensivePlayStyle").value = "0";
       document.getElementById("cardRarity").value = "5";
       document.getElementById("previewPlayerImg").src = "/api/player/image?id=blank";
       currentSkills = { "71": true, "104": true };

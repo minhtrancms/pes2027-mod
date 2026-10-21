@@ -71,9 +71,43 @@ PLAY_STYLE_MAP = {
     14: "Orchestrator",
     15: "Build Up",
     16: "Extra Frontman",
-    17: "Offensive Goalkeeper",
-    18: "Defensive Goalkeeper"
+    17: "Offensive Full-back",
+    18: "Full-back Finisher",
+    19: "Defensive Full-back",
+    20: "Offensive Goalkeeper",
+    21: "Defensive Goalkeeper",
+    22: "Deep-Lying Forward"
 }
+
+DEFENSIVE_PLAY_STYLE_MAP = {
+    0: "Auto / Default",
+    23: "Press Back",
+    24: "Counter Target",
+    25: "Cover Shadow",
+    26: "Outlet Forward",
+    27: "Hard Worker",
+    28: "Lane Blocker",
+    29: "Wide Stopper",
+    30: "Line Controller",
+    31: "Zone Anchor",
+    32: "Last Line",
+    33: "Sweeper GK"
+}
+
+def get_defensive_play_style(pos, st1):
+    if pos == 0 or (16 <= st1 <= 17): return 33
+    if pos == 1: return 30
+    if pos in (2, 3): return 28
+    if pos in (4, 5): return 25
+    if pos in (6, 7): return 27
+    if pos == 8: return 23
+    if pos in (9, 10): return 23
+    if pos in (11, 12): return 26
+    if st1 in (1, 2, 3, 13, 22): return 26
+    if st1 in (4, 6, 10, 14, 18, 19): return 23
+    if st1 in (7, 8, 9, 20): return 25
+    if st1 in (11, 12, 15, 21): return 30
+    return 27
 
 # Skill definitions (index in parameters[70..100])
 SKILLS_LIST = [
@@ -344,6 +378,10 @@ class CardEditorHandler(BaseHTTPRequestHandler):
         elif str(pid) == "9901397": name = "ZINEDINE ZIDANE"
         elif str(pid) == "40291": name = "MESUT ÖZIL"
 
+        ps_list = gp.get("play_style", [1, 0])
+        st1 = ps_list[0] if (isinstance(ps_list, list) and len(ps_list) > 0) else 1
+        st2 = ps_list[1] if (isinstance(ps_list, list) and len(ps_list) > 1 and ps_list[1] > 0) else get_defensive_play_style(params[0] or 0, st1)
+
         summary = get_player_summary(str(pid), record)
         self.json_response({
             "id": str(pid),
@@ -351,7 +389,8 @@ class CardEditorHandler(BaseHTTPRequestHandler):
             "position_id": params[0] or 13,
             "position": POS_MAP.get(params[0] or 13, "CF"),
             "uniform_number": gp.get("uniform_number", 9),
-            "play_style": gp.get("play_style", [1, 0])[0] if isinstance(gp.get("play_style"), list) else 1,
+            "play_style": st1,
+            "defensive_play_style": st2,
             "rarity": gp.get("default_rarity", 5),
             "card_type": gp.get("type", "EPIC"),
             "age": params[46] or 25,
@@ -470,6 +509,12 @@ class CardEditorHandler(BaseHTTPRequestHandler):
         card_type = data.get("card_type", gp.get("type", "EPIC"))
         rarity = int(data.get("rarity", gp.get("default_rarity", 5)))
         play_style = int(data.get("play_style", 1))
+        def_play_style = int(data.get("defensive_play_style", 0))
+        if def_play_style <= 0:
+            def_play_style = get_defensive_play_style(params[0] or 0, play_style)
+        if len(params) >= 70:
+            params[61] = play_style
+            params[62] = def_play_style
         booster_id = int(data.get("booster_id", 0))
 
         updated_record = {
@@ -492,7 +537,7 @@ class CardEditorHandler(BaseHTTPRequestHandler):
                     "customize_point": 0
                 },
                 "is_lock": "YES",
-                "play_style": [play_style, 0],
+                "play_style": [play_style, def_play_style],
                 "initial_base_team_id": 0,
                 "initial_base_national_team_id": gp.get("initial_base_national_team_id", 0),
                 "parameters": params,

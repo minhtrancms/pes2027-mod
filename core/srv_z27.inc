@@ -198,11 +198,19 @@ inline void z27BoostCoach(const ObjP& c) {
 inline void z27ActivateCoachLink(const ObjP& sqData) {
   if (!sqData) return;
   ObjP gp = sqData->optJSONObject("squad_gameplan");
-  ArrP forms = gp ? gp->optJSONArray("formation") : nullptr;
+  if (!gp) return;
+  ObjP mps = gp->optJSONObject("match_plan_settings");
+  if (!mps) {
+    mps = newObj();
+    gp->put("match_plan_settings", mps);
+  }
+  mps->put("use_multi_tactics_plan", 1);
+  ArrP forms = gp->optJSONArray("formation");
   if (!forms) return;
   for (int i = 0; i < forms->length(); i++) {
     ObjP f = forms->optJSONObject(i);
     if (!f) continue;
+    f->put("use_multi_formation", "YES");
     ArrP cld = f->optJSONArray("coach_link_data");
     if (!cld || cld->length() == 0) {
       cld = newArr();
@@ -272,6 +280,7 @@ ObjP z27Squad(int32_t id) {
     if (!res && list->length() > 0) res = z27Copy(list->getJSONObject(0)->getJSONObject("squad_data"));
   }
   if (!res) throw IllegalState("Unknown squad " + str(id));
+  z27ActivateCoachLink(res);
   ArrP pl = res->optJSONArray("player_list");
   if (pl) {
     bool mod = false;
@@ -320,7 +329,7 @@ ObjP z27Squad(int32_t id) {
         }
       }
     }
-    if (mod && s) {
+    if (s && (mod || *s != res->toString())) {
       ziruDb->saveSquad(id, res->toString());
     }
     int homeTid = 0;
@@ -479,6 +488,7 @@ void z27SaveSquad(const std::optional<Bytes>& body) {
   if (!data) throw IllegalArg("No squad_data");
   ObjP cur = z27Squad(sq);
   for (auto& k : data->keys()) cur->put(k, data->get(k));
+  z27ActivateCoachLink(cur);
   ArrP curCoach = cur->optJSONArray("coach");
   if (!curCoach || curCoach->length() == 0) {
     cur->put("coach", newArr()->put(newObj()->put("coach_id", newObj()->put("id", 17608292273375LL)->put("serial", 359042717000000009LL))));
@@ -645,7 +655,7 @@ void z27Restore(const ObjP& jo) {
               }
             }
             ArrP svPs = sv->optJSONArray("play_style");
-            if (!svPs || svPs->length() == 0 || svPs->optInt(0, 0) <= 0) {
+            if (!svPs || svPs->length() < 2 || svPs->optInt(0, 0) <= 0 || svPs->optInt(1, 0) <= 0) {
               sv->put("play_style", z27ResolvePlayStyle(sv->getJSONObject("gameplayer_id")->getLong("id"), p));
             }
             z27ApplyAppearanceAndClub(sv);
@@ -653,11 +663,11 @@ void z27Restore(const ObjP& jo) {
             gl->put(i, sv);
           }
         } else {
-          z27ApplyAppearanceAndClub(p);
           ArrP pPs = p->optJSONArray("play_style");
-          if (!pPs || pPs->length() == 0 || pPs->optInt(0, 0) <= 0) {
+          if (!pPs || pPs->length() < 2 || pPs->optInt(0, 0) <= 0 || pPs->optInt(1, 0) <= 0) {
             p->put("play_style", z27ResolvePlayStyle(p->getJSONObject("gameplayer_id")->getLong("id"), p));
           }
+          z27ApplyAppearanceAndClub(p);
         }
       }
     }
@@ -792,13 +802,15 @@ ObjP z27Opponent(const ObjP& active) {
   }
   ObjP sd = nn(tpl)->getJSONObject("squad_data");
   ObjP plan = sd->getJSONObject("squad_gameplan");
+  ObjP mps = plan->optJSONObject("match_plan_settings");
+  if (mps) mps->put("use_multi_tactics_plan", 1);
   ArrP form = plan->getJSONArray("formation");
   for (int i = 0; i < form->length(); i++) {
     ObjP f = form->getJSONObject(i);
     f->put("formation_offensive", Array::parse(prof->getJSONArray("coordinates")->toString()))
         ->put("formation_defensive", Array::parse(prof->getJSONArray("coordinates")->toString()))
         ->put("team_style", prof->getInt("team_style"))
-        ->put("use_multi_formation", "NO");
+        ->put("use_multi_formation", "YES");
     ArrP cl = f->optJSONArray("coach_link_data");
     if (!cl || cl->length() == 0) {
       cl = newArr();
@@ -1093,7 +1105,7 @@ ObjP z27Home(const ObjP& active) {
     ArrP sk = p->optJSONArray("additional_skill_id");
     if (sk) pObj->put("additional_skill_id", Array::parse(sk->toString()));
     ArrP ps = p->optJSONArray("play_style");
-    if (!ps || ps->length() == 0 || ps->optInt(0, 0) <= 0) {
+    if (!ps || ps->length() < 2 || ps->optInt(0, 0) <= 0 || ps->optInt(1, 0) <= 0) {
       ps = z27ResolvePlayStyle(gid->getLong("id"), p);
       p->put("play_style", ps);
     }
@@ -1268,7 +1280,20 @@ ObjP z27AwaySquad(const ObjP& active) {
                          ->put("averaged_overall", 0)
                          ->put("uniform_number", uni);
       ArrP ps = p->optJSONArray("play_style");
+      if (!ps || ps->length() < 2 || ps->optInt(0, 0) <= 0 || ps->optInt(1, 0) <= 0) {
+        ps = z27ResolvePlayStyle(gid->optLong("id", 0), p);
+      }
       if (ps) pObj->put("play_style", Array::parse(ps->toString()));
+      ArrP params = pObj->optJSONArray("parameters");
+      if (params && params->length() >= 70 && ps && ps->length() > 0) {
+        int st1 = ps->optInt(0, 0);
+        int pos = params->optInt(0, 0);
+        int st2 = ps->length() > 1 ? ps->optInt(1, 0) : 0;
+        if (st2 <= 0 || (pos != 0 && st2 == 33)) st2 = z27GetDefensiveStyle(pos, st1);
+        params->put(61, st1);
+        params->put(62, st2);
+        z27ApplyComPlayStyles(params, pos, st1);
+      }
       playerList->put(pObj);
     }
   }

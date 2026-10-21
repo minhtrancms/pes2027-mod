@@ -205,7 +205,7 @@ Response handleZiruMyLeagueStartGameV71() {
               ArrP sk = p->optJSONArray("additional_skill_id");
               if (sk) pObj->put("additional_skill_id", Array::parse(sk->toString()));
               ArrP ps = p->optJSONArray("play_style");
-              if (!ps || ps->length() == 0 || ps->optInt(0, 0) <= 0) {
+              if (!ps || ps->length() < 2 || ps->optInt(0, 0) <= 0 || ps->optInt(1, 0) <= 0) {
                 ps = z27ResolvePlayStyle(gid->optLong("id", 0), p);
               }
               pObj->put("play_style", ps);

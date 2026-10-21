@@ -109,7 +109,7 @@
     },
     {
       "id": 83083264,
-      "name": "FC Bayern München 00-01 1st "
+      "name": "FC Bayern M\u00fcnchen 00-01 1st\u00a0"
     },
     {
       "id": 83148800,
@@ -129,15 +129,15 @@
     },
     {
       "id": 83214336,
-      "name": "eFootball™ Origin"
+      "name": "eFootball\u2122 Origin"
     },
     {
       "id": 83230720,
-      "name": "eFootball™ Origin (Pro Edition)"
+      "name": "eFootball\u2122 Origin (Pro Edition)"
     },
     {
       "id": 83230721,
-      "name": "eFootball™ Strike"
+      "name": "eFootball\u2122 Strike"
     },
     {
       "id": 83247105,
@@ -149,7 +149,7 @@
     },
     {
       "id": 91832320,
-      "name": "eFootball™ Duel"
+      "name": "eFootball\u2122 Duel"
     },
     {
       "id": 91832321,
@@ -161,7 +161,7 @@
     },
     {
       "id": 91848704,
-      "name": "eFootball™ Origin (Open Edition)"
+      "name": "eFootball\u2122 Origin (Open Edition)"
     },
     {
       "id": 91848705,
@@ -189,19 +189,19 @@
     },
     {
       "id": 91897856,
-      "name": "eFootball™ X"
+      "name": "eFootball\u2122 X"
     },
     {
       "id": 91897857,
-      "name": "eFootball™ Origin (Noir)"
+      "name": "eFootball\u2122 Origin (Noir)"
     },
     {
       "id": 91914240,
-      "name": "eFootball™ Rouge"
+      "name": "eFootball\u2122 Rouge"
     },
     {
       "id": 91930624,
-      "name": "eFootball™ Aegis"
+      "name": "eFootball\u2122 Aegis"
     },
     {
       "id": 91947008,
@@ -221,7 +221,7 @@
     },
     {
       "id": 91947010,
-      "name": "FC Bayern München Oktoberfest 2024"
+      "name": "FC Bayern M\u00fcnchen Oktoberfest 2024"
     },
     {
       "id": 83247106,
@@ -265,15 +265,15 @@
     },
     {
       "id": 91947011,
-      "name": "FC Bayern München 24-25 1st"
+      "name": "FC Bayern M\u00fcnchen 24-25 1st"
     },
     {
       "id": 91947012,
-      "name": "FC Bayern München 24-25 2nd"
+      "name": "FC Bayern M\u00fcnchen 24-25 2nd"
     },
     {
       "id": 91947013,
-      "name": "FC Bayern München 125th Anniversary Kit"
+      "name": "FC Bayern M\u00fcnchen 125th Anniversary Kit"
     },
     {
       "id": 83247110,
@@ -289,7 +289,7 @@
     },
     {
       "id": 91963394,
-      "name": "eFootball™ Impulse"
+      "name": "eFootball\u2122 Impulse"
     },
     {
       "id": 83263489,
@@ -301,7 +301,7 @@
     },
     {
       "id": 91832324,
-      "name": "eFootball™ 30th Anniversary"
+      "name": "eFootball\u2122 30th Anniversary"
     },
     {
       "id": 91963395,
@@ -321,7 +321,7 @@
     },
     {
       "id": 91914242,
-      "name": "Collab. Kit Burak Şentürk"
+      "name": "Collab. Kit Burak \u015eent\u00fcrk"
     },
     {
       "id": 91914243,
@@ -1094,7 +1094,7 @@
                     "link_member_Id": 3
                   }
                 ],
-                "use_multi_formation": "NO"
+                "use_multi_formation": "YES"
               },
               {
                 "formation_offensive": [
@@ -1250,7 +1250,7 @@
                     "link_member_Id": 3
                   }
                 ],
-                "use_multi_formation": "NO"
+                "use_multi_formation": "YES"
               }
             ],
             "match_plan_settings": {
@@ -1313,7 +1313,7 @@
               "auto_member_change": 2,
               "auto_offside_trap": 0,
               "auto_plan_change": 0,
-              "use_multi_tactics_plan": 0,
+              "use_multi_tactics_plan": 1,
               "auto_attack_level": 0,
               "member_assisit": 0
             }
@@ -3229,7 +3229,7 @@
         "is_lock": "YES",
         "play_style": [
           6,
-          0
+          23
         ],
         "initial_base_team_id": 0,
         "initial_base_national_team_id": 208,
@@ -3295,8 +3295,8 @@
           0,
           0,
           0,
-          0,
-          0,
+          6,
+          23,
           0,
           0,
           0,
@@ -3444,8 +3444,8 @@
           0,
           0,
           0,
-          0,
-          0,
+          6,
+          23,
           0,
           0,
           0,
@@ -3572,7 +3572,7 @@
         "is_lock": "YES",
         "play_style": [
           3,
-          0
+          26
         ],
         "initial_base_team_id": 0,
         "initial_base_national_team_id": 146,
@@ -3639,7 +3639,7 @@
           0,
           0,
           3,
-          0,
+          26,
           0,
           0,
           0,
@@ -3788,7 +3788,7 @@
           0,
           0,
           3,
-          0,
+          26,
           0,
           0,
           0,
@@ -3915,7 +3915,7 @@
         "is_lock": "YES",
         "play_style": [
           6,
-          0
+          23
         ],
         "initial_base_team_id": 0,
         "initial_base_national_team_id": 11,
@@ -3981,8 +3981,8 @@
           0,
           0,
           0,
-          0,
-          0,
+          6,
+          23,
           0,
           0,
           0,
@@ -4130,8 +4130,8 @@
           0,
           0,
           0,
-          0,
-          0,
+          6,
+          23,
           0,
           0,
           0,
@@ -28997,7 +28997,7 @@
     "stadium_asset_unlocked_list": [
       {
         "stadium_asset_id": 71,
-        "stadium_asset_name": "eFootball™ Festival '26",
+        "stadium_asset_name": "eFootball\u2122 Festival '26",
         "stadium_asset_type": "ENTRANCE"
       }
     ],
@@ -30012,7 +30012,7 @@
       "map_info": null,
       "is_already_displayed": "NO",
       "announce_view_info": {
-        "text_string": "Sekarang hadiah mencakup Tiket Perak, Tiket Emas, dan Tiket Platinum! Tiket Platinum memberimu peluang mendapatkan hingga 5.000 Koin eFootball™! Selesaikan laga dan dapatkan hadiah untuk semakin memperkuat Tim Impianmu!",
+        "text_string": "Sekarang hadiah mencakup Tiket Perak, Tiket Emas, dan Tiket Platinum! Tiket Platinum memberimu peluang mendapatkan hingga 5.000 Koin eFootball\u2122! Selesaikan laga dan dapatkan hadiah untuk semakin memperkuat Tim Impianmu!",
         "image_file_name": "/banner/campaign_pass/000024/ad68cd632781e9094c22cd483126e73082d131b75727f8aa9675fbf3a1940db9"
       }
     },
