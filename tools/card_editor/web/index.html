@@ -961,6 +961,10 @@
         <span id="deviceText">Checking iPhone...</span>
       </div>
 
+      <button class="btn btn-secondary" id="btnSyncEfhub" style="background: rgba(0, 229, 255, 0.12); border: 1px solid rgba(0, 229, 255, 0.4); color: #00e5ff;">
+        <span>⚡</span> Kéo Data eFHUB
+      </button>
+
       <button class="btn btn-secondary" id="btnNewPlayer">
         <span>+</span> Thêm Cầu Thủ Mới
       </button>
@@ -1740,6 +1744,29 @@
         showToast("Lỗi tải thông tin cầu thủ: " + e.message, true);
       }
     }
+
+    // Auto Sync from eFHUB button
+    document.getElementById("btnSyncEfhub")?.addEventListener("click", async () => {
+      const pid = document.getElementById("playerId").value.trim();
+      if (!pid) {
+        showToast("Vui lòng nhập hoặc chọn Player ID trước!", true);
+        return;
+      }
+      showToast(`Đang kéo dữ liệu và ảnh thẻ ID ${pid} từ eFHUB...`);
+      try {
+        const res = await fetch(`/api/player/sync_efhub?id=${pid}`);
+        const data = await res.json();
+        if (data.success) {
+          showToast(`✓ Đã kéo xong data eFHUB cho ${data.player.name}!`);
+          await loadPlayersList();
+          await loadPlayer(pid);
+        } else {
+          showToast(data.error || "Không thể kéo data từ eFHUB", true);
+        }
+      } catch (err) {
+        showToast("Lỗi kết nối eFHUB: " + err.message, true);
+      }
+    });
 
     // Save Card
     document.getElementById("btnSaveCard").addEventListener("click", async () => {

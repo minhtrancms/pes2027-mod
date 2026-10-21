@@ -460,6 +460,8 @@ class CardEditorHandler(BaseHTTPRequestHandler):
             self.api_list_boxes()
         elif path == "/api/konami/search":
             self.api_search_konami_players(query)
+        elif path == "/api/player/sync_efhub":
+            self.api_sync_efhub(query)
         else:
             self.send_response(404)
             self.end_headers()
@@ -584,6 +586,23 @@ class CardEditorHandler(BaseHTTPRequestHandler):
                 if len(matches) >= 60:
                     break
         self.json_response({"results": matches, "query": q, "total_db": len(_CACHED_KONAMI_PLAYERS)})
+
+    def api_sync_efhub(self, query):
+        pid_raw = query.get("id", ["0"])[0].strip()
+        try:
+            pid = int(pid_raw)
+        except ValueError:
+            pid = 0
+        if pid <= 0:
+            self.json_response({"error": "Invalid player ID"}, 400)
+            return
+
+        try:
+            from tools.sync_from_efhub import sync_player_to_game
+            record = sync_player_to_game(pid)
+            self.json_response({"success": True, "player": get_player_summary(pid, record)})
+        except Exception as e:
+            self.json_response({"error": f"eFHUB sync failed: {str(e)}"}, 500)
 
     def api_get_player(self, pid):
         if not pid:
