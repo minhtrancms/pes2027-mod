@@ -152,8 +152,33 @@ Response serveJsonAsEncryptedMsgPack(const std::string& name) {
     ObjP ci = jo->optJSONObject("coin_info");
     if (!ci) { ci = newObj(); jo->put("coin_info", ci); }
     ci->put("coin", 999999LL);
-    // Remove all cycling banners on home screen per user request
-    jo->put("banner_list", newArr());
+    // 1 single static welcome banner on home screen
+    ArrP bl = newArr();
+    ObjP b = newObj();
+    b->put("announcement_type", "AGENT");
+    b->put("entity_id", 1368LL);
+    b->put("banner_file_name", "/banner/offline/pes27_welcome_wide.png");
+    b->put("url", "");
+    b->put("title_text", "PES 2027 OFFLINE");
+    b->put("description_text", "Chào Mừng Tới Với PES 2027 Offline Edition!");
+    b->put("note_text", "PES 2027 Mobile");
+    ObjP colA = newObj(); colA->put("color_r", 255); colA->put("color_g", 255); colA->put("color_b", 255);
+    ObjP colB = newObj(); colB->put("color_r", 0); colB->put("color_g", 213); colB->put("color_b", 255);
+    b->put("text_color_a", colA);
+    b->put("text_color_b", colB);
+    b->put("is_popup", "NO");
+    b->put("is_event_custom", "NO");
+    b->put("event_major_category", "NONE");
+    b->put("event_match_entry_type", "NONE");
+    b->put("event_ch_type", "NONE");
+    b->put("event_is_vs_user", "NO");
+    b->put("event_has_ranking", "NO");
+    b->put("start_time", 1700000000LL);
+    b->put("end_time", 2000000000LL);
+    b->put("is_time_hidden", "NO");
+    b->put("reward", newArr());
+    bl->put(b);
+    jo->put("banner_list", bl);
   }
   if (jo && name == "responses/get_user_eula_info.json") {
     ObjP uei = jo->optJSONObject("user_eula_info");
@@ -762,6 +787,10 @@ Response serveInner(Request& r) {
             } catch (...) {}
           }
         }
+        try {
+          std::string png = readAsset("responses/banner/offline/pes27_welcome_wide.png");
+          return newFixed(200, "image/png", {png.begin(), png.end()});
+        } catch (...) {}
         try {
           std::string png = readAsset("responses/ziru_blank.png");
           return newFixed(200, "image/png", {png.begin(), png.end()});
