@@ -112,7 +112,7 @@ void z27ApplyAppearanceAndClub(const ObjP& cur) {
     int st1 = ps->optInt(0, 0);
     int pos = params ? params->optInt(0, 0) : 0;
     int st2 = ps->length() > 1 ? ps->optInt(1, 0) : 0;
-    if (st2 <= 0) {
+    if (st2 <= 0 || (pos != 0 && st2 == 33)) {
       st2 = z27GetDefensiveStyle(pos, st1);
       if (ps->length() > 1) ps->put(1, st2);
       else ps->put(st2);

@@ -28,8 +28,8 @@ EXPECTED_VERSION = ("11.1.1", "11.1.101")
 DYLIB_INSTALL_NAME = b"@executable_path/Frameworks/ZiruOffline.dylib"
 MOD_VERSION = "1.1.2"
 
-# Unlock 120 FPS frame pacing for ProMotion displays while keeping native quality settings.
-DEFAULT_COMMANDLINE = b"-t.MaxFPS=120\n"
+# Cap default engine frame pacing at 60 FPS to prevent thermal throttling and stutter.
+DEFAULT_COMMANDLINE = b"-t.MaxFPS=60\n"
 
 # basic::PathGet(PathType): types 6 (cpk) and 7 (pak) are built from GetAppBundlePath() (x20).
 # Switch them to GetDocumentsPath() (x21) so the game reads Documents/cpk and Documents/pak,

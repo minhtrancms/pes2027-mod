@@ -71,13 +71,6 @@ static void ZLog(NSString* fmt, ...) {
   NSString* s = [[NSString alloc] initWithFormat:fmt arguments:ap];
   va_end(ap);
   NSLog(@"[Ziru] %@", s);
-  if (!gLogPath) return;
-  std::lock_guard<std::mutex> g(gLogMu);
-  static NSDateFormatter* df;
-  if (!df) { df = [NSDateFormatter new]; df.dateFormat = @"HH:mm:ss.SSS"; }
-  NSString* line = [NSString stringWithFormat:@"%@ %@\n", [df stringFromDate:[NSDate date]], s];
-  FILE* f = fopen(gLogPath.fileSystemRepresentation, "a");
-  if (f) { fputs(line.UTF8String, f); fclose(f); }
 }
 
 static void logSink(int level, const char* tag, const char* msg) {
@@ -377,14 +370,18 @@ static int hook_remove(const char *path) {
 
 // ---------------------------------------------------------------- pak / cpk / Download file redirection
 static void resolveAltName(char* buffer, size_t bufSize) {
-  if (access(buffer, F_OK) == 0) return;
+  auto checkAccess = [](const char* p) -> bool {
+    if (orig_access) return orig_access(p, F_OK) == 0;
+    return access(p, F_OK) == 0;
+  };
+  if (checkAccess(buffer)) return;
   char alt[1024];
   strncpy(alt, buffer, sizeof(alt) - 1);
   alt[sizeof(alt) - 1] = '\0';
   char* iosPtr = strstr(alt, "_mobile_ios");
   if (iosPtr) {
     memcpy(iosPtr, "_mobile_and", 11);
-    if (access(alt, F_OK) == 0) {
+    if (checkAccess(alt)) {
       strncpy(buffer, alt, bufSize - 1);
       buffer[bufSize - 1] = '\0';
       return;
@@ -393,7 +390,7 @@ static void resolveAltName(char* buffer, size_t bufSize) {
   char* andPtr = strstr(alt, "_mobile_and");
   if (andPtr) {
     memcpy(andPtr, "_mobile_ios", 11);
-    if (access(alt, F_OK) == 0) {
+    if (checkAccess(alt)) {
       strncpy(buffer, alt, bufSize - 1);
       buffer[bufSize - 1] = '\0';
       return;

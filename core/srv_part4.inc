@@ -202,19 +202,33 @@ Response handleZiruMyLeagueStartGameV71() {
               if (item->has("uniform_number")) pObj->put("uniform_number", item->getInt("uniform_number"));
               ArrP ib = p->optJSONArray("initial_booster_id_list");
               if (ib) pObj->put("initial_booster_id_list", Array::parse(ib->toString()));
+              ArrP sk = p->optJSONArray("additional_skill_id");
+              if (sk) pObj->put("additional_skill_id", Array::parse(sk->toString()));
               ArrP ps = p->optJSONArray("play_style");
               if (!ps || ps->length() == 0 || ps->optInt(0, 0) <= 0) {
                 ps = z27ResolvePlayStyle(gid->optLong("id", 0), p);
               }
               pObj->put("play_style", ps);
               ArrP params = pObj->getJSONArray("parameters");
-              if (params && params->length() >= 70 && ps && ps->length() > 0) {
-                int st1 = ps->optInt(0, 0);
-                int pos = params->optInt(0, 0);
-                int st2 = ps->length() > 1 ? ps->optInt(1, 0) : z27GetDefensiveStyle(pos, st1);
-                params->put(61, st1);
-                params->put(62, st2);
-                z27ApplyComPlayStyles(params, pos, st1);
+              if (params && params->length() >= 70) {
+                if (sk) {
+                  for (int si = 0; si < sk->length(); si++) {
+                    int v = sk->optInt(si, -1);
+                    if (isZiruSkillId(v)) {
+                      int pIdx = kZiruSkillParameters[v];
+                      if (pIdx >= 0 && pIdx < params->length()) params->put(pIdx, 1);
+                    }
+                  }
+                }
+                if (ps && ps->length() > 0) {
+                  int st1 = ps->optInt(0, 0);
+                  int pos = params->optInt(0, 0);
+                  int st2 = ps->length() > 1 ? ps->optInt(1, 0) : 0;
+                  if (st2 <= 0 || (pos != 0 && st2 == 33)) st2 = z27GetDefensiveStyle(pos, st1);
+                  params->put(61, st1);
+                  params->put(62, st2);
+                  z27ApplyComPlayStyles(params, pos, st1);
+                }
               }
               out->put(pObj);
             }

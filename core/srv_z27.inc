@@ -35,6 +35,28 @@ Response z27Error(const std::string& msg, const std::exception& e) {
 ObjP z27Teams() { return nn(loadZiruJsonAssetObject("responses/ZIRU_MATCH_TEAMS.json"))->getJSONObject("teams"); }
 
 bool z27ApplyRealClubIdentity(int32_t tid, std::string& name, std::string& shortName) {
+  static const std::unordered_map<int32_t, std::pair<std::string, std::string>> fallbackClubs = {
+    {109, {"Real Madrid", "RMA"}},
+    {173, {"Manchester City", "MCI"}},
+    {103, {"Liverpool FC", "LIV"}},
+    {102, {"Chelsea FC", "CHE"}},
+    {172, {"Atlético de Madrid", "ATM"}},
+    {120, {"Juventus FC", "JUV"}},
+    {124, {"ACF Fiorentina", "FIO"}},
+    {125, {"AS Roma", "ASR"}},
+    {104, {"Tottenham Hotspur", "TOT"}},
+    {105, {"Newcastle United", "NEW"}},
+    {106, {"Aston Villa", "AVL"}},
+    {107, {"West Ham United", "WHU"}},
+    {110, {"Sevilla FC", "SEV"}},
+    {111, {"Real Betis", "BET"}},
+    {112, {"Real Sociedad", "RSO"}},
+    {113, {"Villarreal CF", "VIL"}},
+    {118, {"Napoli", "NAP"}},
+    {126, {"Borussia Dortmund", "BVB"}},
+    {127, {"Bayer 04 Leverkusen", "B04"}},
+    {115, {"AS Monaco", "ASM"}}
+  };
   static ObjP allTeamNames = nullptr;
   static std::mutex tnMu;
   {
@@ -56,6 +78,12 @@ bool z27ApplyRealClubIdentity(int32_t tid, std::string& name, std::string& short
         return true;
       }
     }
+  }
+  auto it = fallbackClubs.find(tid);
+  if (it != fallbackClubs.end()) {
+    name = it->second.first;
+    shortName = it->second.second;
+    return true;
   }
   return false;
 }
@@ -753,7 +781,8 @@ ObjP z27Opponent(const ObjP& active) {
     if (params && params->length() >= 70 && ps && ps->length() > 0) {
       int st1 = ps->optInt(0, 0);
       int pos = params->optInt(0, 0);
-      int st2 = ps->length() > 1 ? ps->optInt(1, 0) : z27GetDefensiveStyle(pos, st1);
+      int st2 = ps->length() > 1 ? ps->optInt(1, 0) : 0;
+      if (st2 <= 0 || (pos != 0 && st2 == 33)) st2 = z27GetDefensiveStyle(pos, st1);
       params->put(61, st1);
       params->put(62, st2);
       z27ApplyComPlayStyles(params, pos, st1);
@@ -1070,13 +1099,25 @@ ObjP z27Home(const ObjP& active) {
     }
     pObj->put("play_style", ps);
     ArrP params = pObj->getJSONArray("parameters");
-    if (params && params->length() >= 70 && ps && ps->length() > 0) {
-      int st1 = ps->optInt(0, 0);
-      int pos = params->optInt(0, 0);
-      int st2 = ps->length() > 1 ? ps->optInt(1, 0) : z27GetDefensiveStyle(pos, st1);
-      params->put(61, st1);
-      params->put(62, st2);
-      z27ApplyComPlayStyles(params, pos, st1);
+    if (params && params->length() >= 70) {
+      if (sk) {
+        for (int si = 0; si < sk->length(); si++) {
+          int v = sk->optInt(si, -1);
+          if (isZiruSkillId(v)) {
+            int pIdx = kZiruSkillParameters[v];
+            if (pIdx >= 0 && pIdx < params->length()) params->put(pIdx, 1);
+          }
+        }
+      }
+      if (ps && ps->length() > 0) {
+        int st1 = ps->optInt(0, 0);
+        int pos = params->optInt(0, 0);
+        int st2 = ps->length() > 1 ? ps->optInt(1, 0) : 0;
+        if (st2 <= 0 || (pos != 0 && st2 == 33)) st2 = z27GetDefensiveStyle(pos, st1);
+        params->put(61, st1);
+        params->put(62, st2);
+        z27ApplyComPlayStyles(params, pos, st1);
+      }
     }
     out->put(pObj);
   }
