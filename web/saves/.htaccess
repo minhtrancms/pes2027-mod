@@ -1,0 +1,7 @@
+# Prevent directory listing and direct browsing
+Options -Indexes
+
+<FilesMatch "\.(json|db)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
