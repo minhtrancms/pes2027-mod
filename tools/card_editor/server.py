@@ -12,6 +12,7 @@ import json
 import time
 import base64
 import sqlite3
+import re
 import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
@@ -595,10 +596,13 @@ class CardEditorHandler(BaseHTTPRequestHandler):
 
     def api_sync_efhub(self, query):
         pid_raw = query.get("id", ["0"])[0].strip()
-        try:
-            pid = int(pid_raw)
-        except ValueError:
-            pid = 0
+        m = re.search(r'players/(\d+)', pid_raw)
+        if not m:
+            digits = re.findall(r'\d+', pid_raw)
+            pid = int(digits[-1]) if digits else 0
+        else:
+            pid = int(m.group(1))
+
         if pid <= 0:
             self.json_response({"error": "Invalid player ID"}, 400)
             return
