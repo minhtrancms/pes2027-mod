@@ -242,13 +242,14 @@
       position: relative;
     }
 
-    .search-icon {
+    .search-icon-svg {
       position: absolute;
       left: 10px;
       top: 50%;
       transform: translateY(-50%);
+      width: 13px;
+      height: 13px;
       color: var(--text-dim);
-      font-size: 12px;
     }
 
     .search-input {
@@ -457,6 +458,12 @@
     .form-grid-4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .form-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
       gap: 12px;
     }
 
@@ -777,8 +784,10 @@
 
     .card-stars {
       color: var(--accent-gold);
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: 700;
       margin-top: 1px;
+      letter-spacing: 1px;
     }
 
     .card-booster-badge {
@@ -880,7 +889,8 @@
       background: transparent;
       border: none;
       color: var(--text-dim);
-      font-size: 16px;
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
     }
 
@@ -944,23 +954,23 @@
 
     <div class="header-actions">
       <button class="btn btn-ghost" id="btnOpenKonamiModal">
-        <span>🔍</span> CSDL 43K Cầu Thủ
+        CSDL 43K Cầu Thủ
       </button>
 
       <button class="btn btn-cyan" id="btnSyncEfhub">
-        <span>⚡</span> Kéo Data eFHUB
+        Kéo Data eFHUB
       </button>
 
       <button class="btn btn-secondary" id="btnNewPlayer">
-        <span>+</span> Thêm Mới
+        + Thêm Mới
       </button>
 
       <button class="btn btn-save" id="btnSaveCard">
-        <span>💾</span> Lưu Thẻ
+        Lưu Thẻ
       </button>
 
       <button class="btn btn-sync" id="btnSyncDevice">
-        <span>🚀</span> Đồng Bộ USB
+        Đồng Bộ USB
       </button>
     </div>
   </header>
@@ -972,7 +982,7 @@
     <div class="panel">
       <div class="panel-header">
         <div class="search-box">
-          <span class="search-icon">🔍</span>
+          <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input type="text" class="search-input" id="searchPlayer" placeholder="Tìm theo tên hoặc ID...">
         </div>
       </div>
@@ -986,14 +996,14 @@
       <!-- Segmented Navigation Header -->
       <div class="editor-top-nav">
         <div class="segmented-control">
-          <button class="seg-btn active" data-section="sec-stats">⚡ Chỉ Số (Stats)</button>
-          <button class="seg-btn" data-section="sec-skills">✨ Kỹ Năng & Booster</button>
-          <button class="seg-btn" data-section="sec-info">👤 Thông Tin Cơ Bản</button>
-          <button class="seg-btn" data-section="sec-squad">⚽ Đội Hình & Box</button>
+          <button class="seg-btn active" data-section="sec-stats">Chỉ Số (Stats)</button>
+          <button class="seg-btn" data-section="sec-skills">Kỹ Năng & Booster</button>
+          <button class="seg-btn" data-section="sec-info">Thông Tin Cơ Bản</button>
+          <button class="seg-btn" data-section="sec-squad">Đội Hình & Box</button>
         </div>
 
         <div style="display: flex; gap: 6px;">
-          <button class="btn btn-ghost" id="btnBuffMax99" style="font-size: 11px; padding: 4px 8px;">⚡ Max 99</button>
+          <button class="btn btn-ghost" id="btnBuffMax99" style="font-size: 11px; padding: 4px 8px;">Max 99</button>
           <button class="btn btn-ghost" id="btnReset75" style="font-size: 11px; padding: 4px 8px;">Reset 75</button>
         </div>
       </div>
@@ -1165,28 +1175,28 @@
         <div class="editor-section" id="sec-skills">
           <div style="margin-bottom: 16px;">
             <div class="form-group" style="margin-bottom: 14px;">
-              <label class="form-label" style="color: var(--accent-gold);">⚡ Booster +3 (Thuộc tính tăng cường)</label>
+              <label class="form-label" style="color: var(--accent-gold);">Booster +3 (Thuộc tính tăng cường)</label>
               <select class="form-control" id="playerBooster" style="font-weight: 600; border-color: rgba(245, 158, 11, 0.4);">
                 <option value="0">Không dùng Booster</option>
-                <option value="70">⚡ Striker Sense (+3 Nhận thức TC, Dứt điểm)</option>
-                <option value="12">⚡ Shooting (+3 Dứt điểm, Lực sút)</option>
-                <option value="15">⚡ Technique (+3 Kiểm soát bóng, Rê bóng)</option>
-                <option value="76">⚡ Fantasista (+3 Rê bóng, Giữ bóng hẹp)</option>
-                <option value="187">⚡ Ball Carrying (+3 Tốc độ, Rê bóng)</option>
-                <option value="28">⚡ Agility (+3 Tốc độ, Tăng tốc)</option>
-                <option value="16">⚡ Passing (+3 Chuyền sệt, Chuyền bổng)</option>
-                <option value="71">⚡ Duel (+3 Tì đè tranh chấp, Xoạc bóng)</option>
-                <option value="19">⚡ Defending (+3 Nhận thức PN, Xoạc bóng)</option>
-                <option value="20">⚡ Physical Contact (+3 Tì đè, Bật nhảy)</option>
-                <option value="170">⚡ Showtime Special (+3 Tốc độ, Dứt điểm, Tăng tốc)</option>
-                <option value="96">⚡ Phenomenal Finisher (+3 Dứt điểm, Kiểm soát)</option>
-                <option value="136">⚡ Epic Legend Slot (+3 Toàn diện)</option>
+                <option value="70">[+3] Striker Sense (Nhận thức TC, Dứt điểm)</option>
+                <option value="12">[+3] Shooting (Dứt điểm, Lực sút)</option>
+                <option value="15">[+3] Technique (Kiểm soát bóng, Rê bóng)</option>
+                <option value="76">[+3] Fantasista (Rê bóng, Giữ bóng hẹp)</option>
+                <option value="187">[+3] Ball Carrying (Tốc độ, Rê bóng)</option>
+                <option value="28">[+3] Agility (Tốc độ, Tăng tốc)</option>
+                <option value="16">[+3] Passing (Chuyền sệt, Chuyền bổng)</option>
+                <option value="71">[+3] Duel (Tì đè tranh chấp, Xoạc bóng)</option>
+                <option value="19">[+3] Defending (Nhận thức PN, Xoạc bóng)</option>
+                <option value="20">[+3] Physical Contact (Tì đè, Bật nhảy)</option>
+                <option value="170">[+3] Showtime Special (Tốc độ, Dứt điểm, Tăng tốc)</option>
+                <option value="96">[+3] Phenomenal Finisher (Dứt điểm, Kiểm soát)</option>
+                <option value="136">[+3] Epic Legend Slot (Toàn diện)</option>
               </select>
             </div>
 
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-              <button class="btn btn-secondary btn-sm" id="btnBuffShowtime" type="button" style="color: var(--accent-gold);">⚡ Full ShowTime</button>
-              <button class="btn btn-secondary btn-sm" id="btnMaxAllSkills" type="button">🔥 Bật Tất Cả</button>
+              <button class="btn btn-secondary btn-sm" id="btnBuffShowtime" type="button" style="color: var(--accent-gold);">Full ShowTime</button>
+              <button class="btn btn-secondary btn-sm" id="btnMaxAllSkills" type="button">Bật Tất Cả</button>
               <button class="btn btn-secondary btn-sm" id="btnClearSkills" type="button">Xóa hết</button>
             </div>
           </div>
@@ -1294,13 +1304,13 @@
             </div>
           </div>
 
-          <div class="form-grid-4" style="margin-top: 14px;">
+          <div class="form-grid-5" style="margin-top: 14px;">
             <div class="form-group">
               <label class="form-label">Độ Hiếm</label>
               <select class="form-control" id="cardRarity">
-                <option value="5">★★★★★ (5 Sao)</option>
-                <option value="4">★★★★ (4 Sao)</option>
-                <option value="3">★★★ (3 Sao)</option>
+                <option value="5">5 Sao (Rarity 5)</option>
+                <option value="4">4 Sao (Rarity 4)</option>
+                <option value="3">3 Sao (Rarity 3)</option>
               </select>
             </div>
 
@@ -1312,6 +1322,11 @@
             <div class="form-group">
               <label class="form-label">Chiều Cao (cm)</label>
               <input type="number" class="form-control" id="playerHeight" value="183">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Cân Nặng (kg)</label>
+              <input type="number" class="form-control" id="playerWeight" value="78">
             </div>
 
             <div class="form-group">
@@ -1328,7 +1343,7 @@
         <div class="editor-section" id="sec-squad">
           <div style="display: flex; flex-direction: column; gap: 14px;">
             <div class="mini-card">
-              <div class="mini-card-title">⚽ Xếp Vào Đội Hình Đá Chính (Slot 0..10)</div>
+              <div class="mini-card-title">Xếp Vào Đội Hình Đá Chính (Slot 0..10)</div>
               <div style="display: flex; gap: 8px;">
                 <select class="form-control" id="selectSquadSlot" style="flex: 1;">
                   <option value="3">CF (Slot 3 - Tiền đạo cắm)</option>
@@ -1344,7 +1359,7 @@
             </div>
 
             <div class="mini-card">
-              <div class="mini-card-title">🎁 Thêm Vào Gói Quay (Agent Box Draw)</div>
+              <div class="mini-card-title">Thêm Vào Gói Quay (Agent Box Draw)</div>
               <div style="display: flex; gap: 8px;">
                 <select class="form-control" id="selectGachaBox" style="flex: 1;">
                   <option value="7001">Box Mod Huyền Thoại (Zidane, R9, Özil...)</option>
@@ -1375,8 +1390,8 @@
 
           <div class="card-bottom">
             <div class="card-player-name" id="previewName">RONALDO R9</div>
-            <div class="card-stars" id="previewStars">★★★★★</div>
-            <div class="card-booster-badge" id="previewBooster">⚡ BOOSTER +3 TECHNIQUE</div>
+            <div class="card-stars" id="previewStars">5 STARS</div>
+            <div class="card-booster-badge" id="previewBooster">BOOSTER +3 TECHNIQUE</div>
           </div>
         </div>
       </div>
@@ -1384,7 +1399,6 @@
       <!-- Minimal Dropzone -->
       <div class="dropzone" id="imageDropzone">
         <input type="file" id="imageInput" accept="image/png, image/jpeg" style="display: none;">
-        <div style="font-size: 16px; margin-bottom: 2px;">🖼️</div>
         <div style="font-size: 11px; font-weight: 600; color: #fff;">Đổi Ảnh Thẻ / Thumbnail</div>
         <div class="dropzone-text">Thả ảnh PNG vào đây hoặc nhấp chọn</div>
       </div>
@@ -1398,7 +1412,7 @@
     <div class="modal-card" style="width: 480px;">
       <div class="modal-header">
         <div class="modal-title" id="modalTitle">Đang đồng bộ ra iPhone...</div>
-        <button class="modal-close" id="modalClose">✕</button>
+        <button class="modal-close" id="modalClose">&times;</button>
       </div>
       <div class="console-box" id="modalConsole">Đang kết nối qua cáp USB...</div>
       <button class="btn btn-secondary" id="modalBtnOk" style="margin-top: 14px; align-self: flex-end; display: none;">Đóng</button>
@@ -1410,7 +1424,7 @@
     <div class="modal-card" style="width: 620px; max-height: 80vh; display: flex; flex-direction: column;">
       <div class="modal-header">
         <div class="modal-title">Tra Cứu CSDL Gốc Konami (43.354 Cầu Thủ)</div>
-        <button class="modal-close" id="konamiModalClose">✕</button>
+        <button class="modal-close" id="konamiModalClose">&times;</button>
       </div>
       <div style="margin-bottom: 10px;">
         <input type="text" class="form-control" id="konamiSearchInput" placeholder="Nhập tên cầu thủ hoặc ID (vd: Messi, Ronaldo, Mbappe, Haaland...)" style="padding: 10px 12px; width: 100%;">
@@ -1429,7 +1443,7 @@
 
   <!-- Toast -->
   <div id="toast">
-    <span id="toastIcon">✓</span>
+    <span id="toastIcon">OK</span>
     <span id="toastMsg">Thao tác thành công</span>
   </div>
 
@@ -1486,11 +1500,27 @@
       const toastMsg = document.getElementById("toastMsg");
       const toastIcon = document.getElementById("toastIcon");
       toastMsg.innerText = msg;
-      toastIcon.innerText = isError ? "⚠️" : "✓";
+      toastIcon.innerText = isError ? "LỖI" : "OK";
       toast.style.borderColor = isError ? "var(--accent-red)" : "var(--accent-blue)";
       toast.classList.add("show");
       setTimeout(() => toast.classList.remove("show"), 2800);
     }
+
+    // Safe DOM helpers (guarantees null-pointer exceptions can never occur)
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = (val !== undefined && val !== null) ? val : "";
+    };
+
+    const getVal = (id, def = "") => {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : def;
+    };
+
+    const getInt = (id, def = 0) => {
+      const el = document.getElementById(id);
+      return el ? parseInt(el.value) || def : def;
+    };
 
     // Segmented Navigation Switcher
     document.querySelectorAll(".seg-btn").forEach(btn => {
@@ -1499,7 +1529,8 @@
         document.querySelectorAll(".editor-section").forEach(s => s.classList.remove("active"));
         btn.classList.add("active");
         const secId = btn.getAttribute("data-section");
-        document.getElementById(secId).classList.add("active");
+        const target = document.getElementById(secId);
+        if (target) target.classList.add("active");
       });
     });
 
@@ -1510,32 +1541,35 @@
         document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
         btn.classList.add("active");
         const tabId = btn.getAttribute("data-tab");
-        document.getElementById(tabId).classList.add("active");
+        const target = document.getElementById(tabId);
+        if (target) target.classList.add("active");
       });
     });
 
     // Render Skills Grid
     function renderSkillsGrid() {
       const container = document.getElementById("skillsGrid");
+      if (!container) return;
       container.innerHTML = "";
       SKILLS_DEF.forEach(s => {
         const item = document.createElement("div");
         item.className = `skill-toggle ${s.showtime ? 'showtime' : ''} ${currentSkills[s.id] ? 'active' : ''}`;
         item.dataset.skillId = s.id;
         item.innerHTML = `
-          <div class="skill-checkbox">${currentSkills[s.id] ? '✓' : ''}</div>
+          <div class="skill-checkbox">${currentSkills[s.id] ? 'V' : ''}</div>
           <span class="skill-label">${s.name}</span>
         `;
         item.addEventListener("click", () => {
           currentSkills[s.id] = !currentSkills[s.id];
           item.classList.toggle("active", currentSkills[s.id]);
-          item.querySelector(".skill-checkbox").innerText = currentSkills[s.id] ? '✓' : '';
+          item.querySelector(".skill-checkbox").innerText = currentSkills[s.id] ? 'V' : '';
         });
         container.appendChild(item);
       });
     }
 
     function updateStatInputColor(input, val) {
+      if (!input) return;
       input.classList.remove("god", "high", "mid", "low");
       if (val >= 95) input.classList.add("god");
       else if (val >= 85) input.classList.add("high");
@@ -1549,15 +1583,15 @@
 
       const update = (val) => {
         val = Math.max(40, Math.min(105, parseInt(val) || 40));
-        slider.value = val;
-        numInput.value = val;
+        if (slider) slider.value = val;
+        if (numInput) numInput.value = val;
         updateStatInputColor(numInput, val);
         calculateLiveOVR();
       };
 
-      slider.addEventListener("input", (e) => update(e.target.value));
-      numInput.addEventListener("input", (e) => update(e.target.value));
-      updateStatInputColor(numInput, parseInt(numInput.value));
+      if (slider) slider.addEventListener("input", (e) => update(e.target.value));
+      if (numInput) numInput.addEventListener("input", (e) => update(e.target.value));
+      updateStatInputColor(numInput, parseInt(numInput ? numInput.value : 70));
     });
 
     // Quick Buff Stats
@@ -1565,33 +1599,32 @@
       document.querySelectorAll(".stat-slider-row").forEach(row => {
         const slider = row.querySelector(".stat-slider");
         const numInput = row.querySelector(".stat-num-input");
-        slider.value = 99;
-        numInput.value = 99;
-        updateStatInputColor(numInput, 99);
+        if (slider) slider.value = 99;
+        if (numInput) { numInput.value = 99; updateStatInputColor(numInput, 99); }
       });
       calculateLiveOVR();
-      showToast("Đã buff toàn bộ chỉ số lên 99!");
+      showToast("Da buff toan bo chi so len 99");
     });
 
     document.getElementById("btnReset75")?.addEventListener("click", () => {
       document.querySelectorAll(".stat-slider-row").forEach(row => {
         const slider = row.querySelector(".stat-slider");
         const numInput = row.querySelector(".stat-num-input");
-        slider.value = 75;
-        numInput.value = 75;
-        updateStatInputColor(numInput, 75);
+        if (slider) slider.value = 75;
+        if (numInput) { numInput.value = 75; updateStatInputColor(numInput, 75); }
       });
       calculateLiveOVR();
-      showToast("Đã reset chỉ số về 75");
+      showToast("Da reset chi so ve 75");
     });
 
     function calculateLiveOVR() {
       const posSelect = document.getElementById("playerPosition");
-      const posText = posSelect.options[posSelect.selectedIndex].text.split(" - ")[0];
+      if (!posSelect) return 85;
+      const posText = posSelect.options[posSelect.selectedIndex]?.text.split(" - ")[0] || "CF";
       
       const getStat = (name) => {
         const row = document.querySelector(`.stat-slider-row[data-stat="${name}"]`);
-        return row ? parseInt(row.querySelector(".stat-slider").value) || 70 : 70;
+        return row ? parseInt(row.querySelector(".stat-slider")?.value) || 70 : 70;
       };
 
       let ovr = 85;
@@ -1610,49 +1643,63 @@
       }
 
       ovr = Math.max(60, Math.min(105, Math.round(ovr + 3)));
-      document.getElementById("previewOvr").innerText = ovr;
+      const ovrEl = document.getElementById("previewOvr");
+      if (ovrEl) ovrEl.innerText = ovr;
       return ovr;
     }
 
     function syncLiveCardPreview() {
-      const name = document.getElementById("playerName").value || "PLAYER";
+      const name = getVal("playerName", "PLAYER");
       const posSelect = document.getElementById("playerPosition");
-      const pos = posSelect.options[posSelect.selectedIndex].text.split(" - ")[0];
-      const cardType = document.getElementById("cardType").value;
-      const rarity = parseInt(document.getElementById("cardRarity").value);
+      const pos = posSelect?.options[posSelect.selectedIndex]?.text.split(" - ")[0] || "CF";
+      const cardType = getVal("cardType", "EPIC");
+      const rarity = getInt("cardRarity", 5);
 
-      document.getElementById("previewName").innerText = name.toUpperCase();
+      const previewName = document.getElementById("previewName");
+      if (previewName) previewName.innerText = name.toUpperCase();
       
       const posBadge = document.getElementById("previewPos");
-      posBadge.innerText = pos;
-      posBadge.className = `card-pos-badge pos-${pos}`;
+      if (posBadge) {
+        posBadge.innerText = pos;
+        posBadge.className = `card-pos-badge pos-${pos}`;
+      }
 
       const cardVisual = document.getElementById("cardVisual");
-      cardVisual.className = `mod-card card-${cardType}`;
-      document.getElementById("previewType").innerText = cardType;
+      if (cardVisual) {
+        cardVisual.className = `mod-card card-${cardType}`;
+      }
+      const previewType = document.getElementById("previewType");
+      if (previewType) previewType.innerText = cardType;
 
-      document.getElementById("previewStars").innerText = "★".repeat(rarity);
+      const previewStars = document.getElementById("previewStars");
+      if (previewStars) previewStars.innerText = `${rarity} STARS`;
 
       const boosterSelect = document.getElementById("playerBooster");
       const boosterVal = parseInt(boosterSelect ? boosterSelect.value : "0") || 0;
       const boosterText = boosterSelect && boosterSelect.selectedIndex >= 0 ? boosterSelect.options[boosterSelect.selectedIndex].text : "";
 
-      if (boosterVal > 0) {
-        document.getElementById("previewBooster").innerText = boosterText.split(" (+")[0].toUpperCase();
-      } else if (cardType === "SHOWTIME") {
-        document.getElementById("previewBooster").innerText = "⚡ PHENOMENAL FINISHING";
-      } else if (cardType === "EPIC") {
-        document.getElementById("previewBooster").innerText = "⚡ BOOSTER +3 TECHNIQUE";
-      } else {
-        document.getElementById("previewBooster").innerText = "";
+      const previewBooster = document.getElementById("previewBooster");
+      if (previewBooster) {
+        if (boosterVal > 0) {
+          previewBooster.innerText = boosterText.split(" (")[0].replace("[+3] ", "BOOSTER +3 ").toUpperCase();
+        } else if (cardType === "SHOWTIME") {
+          previewBooster.innerText = "PHENOMENAL FINISHING";
+        } else if (cardType === "EPIC") {
+          previewBooster.innerText = "BOOSTER +3 TECHNIQUE";
+        } else {
+          previewBooster.innerText = "";
+        }
       }
 
       calculateLiveOVR();
     }
 
     ["playerName", "playerPosition", "cardType", "cardRarity", "playerBooster"].forEach(id => {
-      document.getElementById(id).addEventListener("input", syncLiveCardPreview);
-      document.getElementById(id).addEventListener("change", syncLiveCardPreview);
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("input", syncLiveCardPreview);
+        el.addEventListener("change", syncLiveCardPreview);
+      }
     });
 
     async function checkDeviceStatus() {
@@ -1662,11 +1709,11 @@
         const indicator = document.getElementById("deviceIndicator");
         const text = document.getElementById("deviceText");
         if (data.connected) {
-          indicator.classList.add("connected");
-          text.innerText = data.device.replace("iPhone12,3", "iPhone 11 Pro");
+          if (indicator) indicator.classList.add("connected");
+          if (text) text.innerText = data.device.replace("iPhone12,3", "iPhone 11 Pro");
         } else {
-          indicator.classList.remove("connected");
-          text.innerText = "Chưa cắm USB iPhone";
+          if (indicator) indicator.classList.remove("connected");
+          if (text) text.innerText = "Chưa cắm USB iPhone";
         }
       } catch (e) {
         console.warn("Device check failed:", e);
@@ -1686,6 +1733,7 @@
 
     function renderPlayerList(players) {
       const container = document.getElementById("playerList");
+      if (!container) return;
       container.innerHTML = "";
       players.forEach(p => {
         const item = document.createElement("div");
@@ -1720,19 +1768,19 @@
         const data = await res.json();
         if (data.error) throw new Error(data.error);
 
-        document.getElementById("playerId").value = data.id;
-        document.getElementById("playerName").value = data.name;
-        document.getElementById("uniformNumber").value = data.uniform_number;
-        document.getElementById("playerPosition").value = data.position_id;
-        document.getElementById("cardType").value = data.card_type;
-        document.getElementById("playStyle").value = data.play_style;
-        document.getElementById("defensivePlayStyle").value = data.defensive_play_style || "0";
-        document.getElementById("cardRarity").value = data.rarity;
-        document.getElementById("playerAge").value = data.age;
-        document.getElementById("playerHeight").value = data.height;
-        document.getElementById("playerWeight").value = data.weight;
-        document.getElementById("preferredFoot").value = data.preferred_foot;
-        document.getElementById("playerBooster").value = data.booster_id || "0";
+        setVal("playerId", data.id);
+        setVal("playerName", data.name);
+        setVal("uniformNumber", data.uniform_number);
+        setVal("playerPosition", data.position_id);
+        setVal("cardType", data.card_type);
+        setVal("playStyle", data.play_style);
+        setVal("defensivePlayStyle", data.defensive_play_style || "0");
+        setVal("cardRarity", data.rarity);
+        setVal("playerAge", data.age);
+        setVal("playerHeight", data.height);
+        setVal("playerWeight", data.weight);
+        setVal("preferredFoot", data.preferred_foot);
+        setVal("playerBooster", data.booster_id || "0");
 
         if (data.stats) {
           Object.entries(data.stats).forEach(([k, v]) => {
@@ -1740,16 +1788,21 @@
             if (row) {
               const slider = row.querySelector(".stat-slider");
               const numInput = row.querySelector(".stat-num-input");
-              slider.value = v;
-              numInput.value = v;
-              updateStatInputColor(numInput, v);
+              if (slider) slider.value = v;
+              if (numInput) {
+                numInput.value = v;
+                updateStatInputColor(numInput, v);
+              }
             }
           });
         }
 
         currentSkills = data.skills || {};
         renderSkillsGrid();
-        document.getElementById("previewPlayerImg").src = `${data.thumbnail}&t=${Date.now()}`;
+
+        const imgEl = document.getElementById("previewPlayerImg");
+        if (imgEl) imgEl.src = `${data.thumbnail}&t=${Date.now()}`;
+
         syncLiveCardPreview();
       } catch (e) {
         showToast("Lỗi tải thông tin cầu thủ: " + e.message, true);
@@ -1758,7 +1811,7 @@
 
     // Auto Sync from eFHUB button
     document.getElementById("btnSyncEfhub")?.addEventListener("click", async () => {
-      const pid = document.getElementById("playerId").value.trim();
+      const pid = getVal("playerId");
       if (!pid) {
         showToast("Vui lòng nhập hoặc chọn Player ID trước!", true);
         return;
@@ -1768,8 +1821,8 @@
         const res = await fetch(`/api/player/sync_efhub?id=${pid}`);
         const data = await res.json();
         if (data.success) {
-          showToast(`✓ Đã kéo xong data eFHUB cho ${data.player.name}!`);
-          await loadPlayers(document.getElementById("searchPlayer").value);
+          showToast(`Đã kéo xong data eFHUB cho ${data.player.name}`);
+          await loadPlayers(getVal("searchPlayer"));
           await selectPlayer(pid);
         } else {
           showToast(data.error || "Không thể kéo data từ eFHUB", true);
@@ -1781,33 +1834,33 @@
 
     // Save Card
     document.getElementById("btnSaveCard").addEventListener("click", async () => {
-      const pid = document.getElementById("playerId").value.trim();
-      const name = document.getElementById("playerName").value.trim();
+      const pid = getVal("playerId");
+      const name = getVal("playerName");
       if (!pid) return showToast("Vui lòng nhập Player ID", true);
 
       const stats = {};
       document.querySelectorAll(".stat-slider-row").forEach(row => {
         const key = row.dataset.stat;
-        const val = parseInt(row.querySelector(".stat-slider").value) || 70;
+        const val = parseInt(row.querySelector(".stat-slider")?.value) || 70;
         stats[key] = val;
       });
 
       const payload = {
         id: pid,
         name: name,
-        position_id: parseInt(document.getElementById("playerPosition").value),
-        card_type: document.getElementById("cardType").value,
-        play_style: parseInt(document.getElementById("playStyle").value),
-        defensive_play_style: parseInt(document.getElementById("defensivePlayStyle").value || "0"),
-        rarity: parseInt(document.getElementById("cardRarity").value),
-        uniform_number: parseInt(document.getElementById("uniformNumber").value),
-        age: parseInt(document.getElementById("playerAge").value),
-        height: parseInt(document.getElementById("playerHeight").value),
-        weight: parseInt(document.getElementById("playerWeight").value),
-        preferred_foot: parseInt(document.getElementById("preferredFoot").value),
+        position_id: getInt("playerPosition", 13),
+        card_type: getVal("cardType", "EPIC"),
+        play_style: getInt("playStyle", 1),
+        defensive_play_style: getInt("defensivePlayStyle", 0),
+        rarity: getInt("cardRarity", 5),
+        uniform_number: getInt("uniformNumber", 9),
+        age: getInt("playerAge", 25),
+        height: getInt("playerHeight", 180),
+        weight: getInt("playerWeight", 75),
+        preferred_foot: getInt("preferredFoot", 1),
         stats: stats,
         skills: currentSkills,
-        booster_id: parseInt(document.getElementById("playerBooster").value || "0")
+        booster_id: getInt("playerBooster", 0)
       };
 
       try {
@@ -1818,8 +1871,8 @@
         });
         const resData = await res.json();
         if (resData.success) {
-          showToast(`✓ Đã lưu thành công thẻ ${name}!`);
-          loadPlayers(document.getElementById("searchPlayer").value);
+          showToast(`Đã lưu thành công thẻ ${name}`);
+          loadPlayers(getVal("searchPlayer"));
         } else {
           showToast(resData.error || "Lỗi lưu thẻ", true);
         }
@@ -1830,8 +1883,8 @@
 
     // Gacha & Squad Actions
     document.getElementById("btnAddBox")?.addEventListener("click", async () => {
-      const pid = parseInt(document.getElementById("playerId").value.trim());
-      const boxId = parseInt(document.getElementById("selectGachaBox").value);
+      const pid = parseInt(getVal("playerId"));
+      const boxId = getInt("selectGachaBox", 7001);
       if (!pid) return showToast("Chưa chọn cầu thủ", true);
 
       try {
@@ -1842,7 +1895,7 @@
         });
         const resData = await res.json();
         if (resData.success) {
-          showToast(`✓ Đã thêm cầu thủ vào Box ID ${boxId}!`);
+          showToast(`Đã thêm cầu thủ vào Box ID ${boxId}`);
         } else {
           showToast(resData.error || "Lỗi thêm vào Box", true);
         }
@@ -1852,9 +1905,9 @@
     });
 
     document.getElementById("btnAddToSquad")?.addEventListener("click", async () => {
-      const pid = parseInt(document.getElementById("playerId").value.trim());
-      const uni = parseInt(document.getElementById("uniformNumber").value) || 9;
-      const slot = parseInt(document.getElementById("selectSquadSlot").value);
+      const pid = parseInt(getVal("playerId"));
+      const uni = getInt("uniformNumber", 9);
+      const slot = getInt("selectSquadSlot", 3);
       if (!pid) return showToast("Chưa chọn cầu thủ", true);
 
       try {
@@ -1865,7 +1918,7 @@
         });
         const resData = await res.json();
         if (resData.success) {
-          showToast(`✓ Đã xếp cầu thủ đá chính Slot ${slot}!`);
+          showToast(`Đã xếp cầu thủ đá chính Slot ${slot}`);
         } else {
           showToast(resData.error || "Lỗi xếp đội hình", true);
         }
@@ -1881,34 +1934,34 @@
       const consoleBox = document.getElementById("modalConsole");
       const btnOk = document.getElementById("modalBtnOk");
 
-      modal.classList.add("show");
-      title.innerText = "Đang đồng bộ ra iPhone...";
-      btnOk.style.display = "none";
-      consoleBox.innerText = "Bắt đầu cập nhật save game...\nĐang kết nối qua cáp USB...";
+      if (modal) modal.classList.add("show");
+      if (title) title.innerText = "Đang đồng bộ ra iPhone...";
+      if (btnOk) btnOk.style.display = "none";
+      if (consoleBox) consoleBox.innerText = "Bắt đầu cập nhật save game...\nĐang kết nối qua cáp USB...";
 
       try {
         const res = await fetch("/api/device/sync", { method: "POST" });
         const resData = await res.json();
-        btnOk.style.display = "block";
+        if (btnOk) btnOk.style.display = "block";
 
         if (resData.success) {
-          title.innerText = "✓ Đồng bộ thành công!";
-          consoleBox.innerText += "\n" + (resData.log || "Hoàn tất chuyển file vào app PES2027 trên iPhone!");
-          showToast("Đã đồng bộ xong dữ liệu ra iPhone!");
+          if (title) title.innerText = "Đồng bộ thành công!";
+          if (consoleBox) consoleBox.innerText += "\n" + (resData.log || "Hoàn tất chuyển file vào app PES2027 trên iPhone!");
+          showToast("Đã đồng bộ xong dữ liệu ra iPhone");
         } else {
-          title.innerText = "⚠️ Đồng bộ thất bại";
-          consoleBox.innerText += "\nLỖI: " + (resData.error || resData.log || "Không xác định");
-          showToast("Đồng bộ gặp lỗi!", true);
+          if (title) title.innerText = "Đồng bộ thất bại";
+          if (consoleBox) consoleBox.innerText += "\nLỖI: " + (resData.error || resData.log || "Không xác định");
+          showToast("Đồng bộ gặp lỗi", true);
         }
       } catch (e) {
-        btnOk.style.display = "block";
-        title.innerText = "⚠️ Lỗi kết nối";
-        consoleBox.innerText += "\nLỗi fetch API: " + e.message;
+        if (btnOk) btnOk.style.display = "block";
+        if (title) title.innerText = "Lỗi kết nối";
+        if (consoleBox) consoleBox.innerText += "\nLỗi fetch API: " + e.message;
       }
     });
 
-    document.getElementById("modalClose").addEventListener("click", () => document.getElementById("syncModal").classList.remove("show"));
-    document.getElementById("modalBtnOk").addEventListener("click", () => document.getElementById("syncModal").classList.remove("show"));
+    document.getElementById("modalClose")?.addEventListener("click", () => document.getElementById("syncModal")?.classList.remove("show"));
+    document.getElementById("modalBtnOk")?.addEventListener("click", () => document.getElementById("syncModal")?.classList.remove("show"));
 
     // Konami Database Modal (43K players)
     const konamiModal = document.getElementById("konamiModal");
@@ -1917,24 +1970,26 @@
     const konamiResultCount = document.getElementById("konamiResultCount");
 
     function openKonamiSearch(initialQuery = "") {
+      if (!konamiModal) return;
       konamiModal.classList.add("show");
-      if (initialQuery) konamiSearchInput.value = initialQuery;
-      setTimeout(() => konamiSearchInput.focus(), 100);
-      triggerKonamiSearch(konamiSearchInput.value.trim());
+      if (initialQuery && konamiSearchInput) konamiSearchInput.value = initialQuery;
+      setTimeout(() => konamiSearchInput?.focus(), 100);
+      triggerKonamiSearch(konamiSearchInput ? konamiSearchInput.value.trim() : "");
     }
 
     document.getElementById("btnOpenKonamiModal")?.addEventListener("click", () => openKonamiSearch());
-    document.getElementById("linkLookupKonami")?.addEventListener("click", () => openKonamiSearch(document.getElementById("playerName").value.trim()));
-    document.getElementById("konamiModalClose")?.addEventListener("click", () => konamiModal.classList.remove("show"));
-    document.getElementById("konamiModalOk")?.addEventListener("click", () => konamiModal.classList.remove("show"));
+    document.getElementById("linkLookupKonami")?.addEventListener("click", () => openKonamiSearch(getVal("playerName")));
+    document.getElementById("konamiModalClose")?.addEventListener("click", () => konamiModal?.classList.remove("show"));
+    document.getElementById("konamiModalOk")?.addEventListener("click", () => konamiModal?.classList.remove("show"));
 
     let searchKonamiTimer = null;
-    konamiSearchInput.addEventListener("input", (e) => {
+    konamiSearchInput?.addEventListener("input", (e) => {
       clearTimeout(searchKonamiTimer);
       searchKonamiTimer = setTimeout(() => triggerKonamiSearch(e.target.value.trim()), 200);
     });
 
     async function triggerKonamiSearch(q) {
+      if (!konamiResultsList || !konamiResultCount) return;
       if (!q) {
         konamiResultsList.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-dim); font-size: 12px;">Gõ tên hoặc Player ID để tra cứu trong 43.354 cầu thủ (vd: Messi, Ronaldo, Mbappe, Haaland...)</div>`;
         konamiResultCount.innerText = "CSDL gốc: 43.354 cầu thủ";
@@ -1974,52 +2029,55 @@
     }
 
     window.selectKonamiPlayer = function(id, name) {
-      document.getElementById("playerId").value = id;
-      document.getElementById("playerName").value = name;
-      konamiModal.classList.remove("show");
-      showToast(`Đã chọn ${name} (ID: ${id})!`);
+      setVal("playerId", id);
+      setVal("playerName", name);
+      konamiModal?.classList.remove("show");
+      showToast(`Đã chọn ${name} (ID: ${id})`);
       selectPlayer(id);
     };
 
     // New Player Template
     document.getElementById("btnNewPlayer").addEventListener("click", () => {
-      document.getElementById("playerId").value = "100" + Math.floor(Math.random() * 899 + 100);
-      document.getElementById("playerName").value = "NEW LEGEND";
-      document.getElementById("uniformNumber").value = 10;
-      document.getElementById("playerPosition").value = 13;
-      document.getElementById("cardType").value = "EPIC";
-      document.getElementById("cardRarity").value = 5;
-      document.getElementById("playerBooster").value = 70;
+      setVal("playerId", "100" + Math.floor(Math.random() * 899 + 100));
+      setVal("playerName", "NEW LEGEND");
+      setVal("uniformNumber", 10);
+      setVal("playerPosition", 13);
+      setVal("cardType", "EPIC");
+      setVal("cardRarity", 5);
+      setVal("playerBooster", 70);
       document.querySelectorAll(".stat-slider-row").forEach(row => {
-        row.querySelector(".stat-slider").value = 85;
-        row.querySelector(".stat-num-input").value = 85;
-        updateStatInputColor(row.querySelector(".stat-num-input"), 85);
+        const slider = row.querySelector(".stat-slider");
+        const numInput = row.querySelector(".stat-num-input");
+        if (slider) slider.value = 85;
+        if (numInput) { numInput.value = 85; updateStatInputColor(numInput, 85); }
       });
       currentSkills = {};
       [70, 71, 72, 85, 87, 88, 104].forEach(sId => currentSkills[sId] = true);
       renderSkillsGrid();
       syncLiveCardPreview();
-      showToast("Đã tạo mẫu thẻ cầu thủ mới! Nhấn 'Lưu Thẻ' khi xong.");
+      showToast("Đã tạo mẫu thẻ mới. Nhấn 'Lưu Thẻ' khi xong.");
     });
 
     // Image Upload Handling
     const dropzone = document.getElementById("imageDropzone");
     const fileInput = document.getElementById("imageInput");
 
-    dropzone.addEventListener("click", () => fileInput.click());
-    dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.style.borderColor = "var(--accent-blue)"; });
-    dropzone.addEventListener("dragleave", () => { dropzone.style.borderColor = "var(--surface-border)"; });
-    dropzone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropzone.style.borderColor = "var(--surface-border)";
-      if (e.dataTransfer.files.length > 0) uploadImage(e.dataTransfer.files[0]);
-    });
-    fileInput.addEventListener("change", (e) => {
-      if (e.target.files.length > 0) uploadImage(e.target.files[0]);
-    });
+    if (dropzone && fileInput) {
+      dropzone.addEventListener("click", () => fileInput.click());
+      dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.style.borderColor = "var(--accent-blue)"; });
+      dropzone.addEventListener("dragleave", () => { dropzone.style.borderColor = "var(--surface-border)"; });
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = "var(--surface-border)";
+        if (e.dataTransfer.files.length > 0) uploadImage(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) uploadImage(e.target.files[0]);
+      });
+    }
 
     async function uploadImage(file) {
-      const pid = document.getElementById("playerId").value.trim();
+      const pid = getVal("playerId");
       if (!pid) return showToast("Vui lòng chọn hoặc nhập Player ID trước khi tải ảnh", true);
 
       const reader = new FileReader();
@@ -2032,9 +2090,10 @@
           });
           const resData = await res.json();
           if (resData.success) {
-            document.getElementById("previewPlayerImg").src = `${resData.thumbnail}&t=${Date.now()}`;
-            showToast("✓ Đã cập nhật ảnh thẻ mới!");
-            loadPlayers(document.getElementById("searchPlayer").value);
+            const imgEl = document.getElementById("previewPlayerImg");
+            if (imgEl) imgEl.src = `${resData.thumbnail}&t=${Date.now()}`;
+            showToast("Đã cập nhật ảnh thẻ mới");
+            loadPlayers(getVal("searchPlayer"));
           } else {
             showToast(resData.error || "Lỗi tải ảnh", true);
           }
@@ -2046,19 +2105,19 @@
     }
 
     // Quick Skill Buffs
-    document.getElementById("btnBuffShowtime").addEventListener("click", () => {
+    document.getElementById("btnBuffShowtime")?.addEventListener("click", () => {
       [102, 103, 104, 105, 140, 141, 143].forEach(id => currentSkills[id] = true);
       renderSkillsGrid();
-      showToast("⚡ Đã kích hoạt toàn bộ 7 kỹ năng ShowTime!");
+      showToast("Đã kích hoạt toàn bộ 7 kỹ năng ShowTime");
     });
 
-    document.getElementById("btnMaxAllSkills").addEventListener("click", () => {
+    document.getElementById("btnMaxAllSkills")?.addEventListener("click", () => {
       SKILLS_DEF.forEach(s => currentSkills[s.id] = true);
       renderSkillsGrid();
-      showToast("🔥 Đã bật tất cả kỹ năng!");
+      showToast("Đã bật tất cả kỹ năng");
     });
 
-    document.getElementById("btnClearSkills").addEventListener("click", () => {
+    document.getElementById("btnClearSkills")?.addEventListener("click", () => {
       currentSkills = {};
       renderSkillsGrid();
       showToast("Đã xóa tất cả kỹ năng");
@@ -2066,7 +2125,7 @@
 
     // Search Player Input
     let searchTimer = null;
-    document.getElementById("searchPlayer").addEventListener("input", (e) => {
+    document.getElementById("searchPlayer")?.addEventListener("input", (e) => {
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => loadPlayers(e.target.value.trim()), 200);
     });
