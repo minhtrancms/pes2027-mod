@@ -110,35 +110,6 @@ PATCHES = [
     # Prevent AddStadiumDlTask crash at 0x1046fe0b4 on null interrupt size by branching directly to return success
     (0x1046FE0B0, 0xB4000060, 0x14000003, "AddStadiumDlTask::Bind: branch over null SetInterruptGameSize"),
 
-    # ACharacterActor::SetUniformConfigType(bool), 0x1008f2fa8, selects
-    # licensed/edit font mode (0/2). Preserve it and BackNumberStep's load of
-    # that mode at 0x10089f4a4: forcing 2 redirects BOTH names and numbers.
-    # Enable only the actual name visibility flag, stored at actor + 0xf10.
-    (0x10162331C, 0x1A9F07E1, 0x52800021, "SetupUniformConfig: cset w1, ne -> mov w1, #1"),
-    (0x100895F44, 0x397C4268, 0x52800028, "APlayerActorMobile::SetUniformName: ldrb w8,[x19,#0xf10] -> mov w8, #1"),
-    (0x100895F50, 0x540008C1, 0xD503201F, "APlayerActorMobile::SetUniformName: b.ne -> nop"),
-    (0x100896058, 0x397C4268, 0x52800028, "APlayerActorMobile::SetUniformName (init): ldrb w8,[x19,#0xf10] -> mov w8, #1"),
-    (0x100896064, 0x54FFF780, 0x17FFFFBC, "APlayerActorMobile::SetUniformName (init): b.eq -> b 0x100895f54"),
-    (0x100911418, 0x397C426A, 0x5280002A, "APlayerActor::SetUniformName: ldrb w10,[x19,#0xf10] -> mov w10, #1"),
-    (0x10091141C, 0x36001A2A, 0xD503201F, "APlayerActor::SetUniformName: tbz -> nop"),
-    (0x100911448, 0x397C4268, 0x52800028, "APlayerActor::SetUniformName: ldrb w8,[x19,#0xf10] -> mov w8, #1"),
-    (0x100911450, 0x54001881, 0xD503201F, "APlayerActor::SetUniformName: b.ne -> nop"),
-
-    # SetUniformNumber (0x10089f2e8): bypass all LOD/capture guards straight to number store and state=1
-    (0x10089F2E8, 0xB950B808, 0x1400000D, "SetUniformNumber: bypass guards -> b 0x10089f31c"),
-
-    # SetUniformBackNumber (0x100895c30): force back number rendering on jersey material
-    (0x100895C68, 0x397D1268, 0x52800028, "SetUniformBackNumber: ldrb w8,[x19,#0xf44] -> mov w8, #1"),
-    (0x100895C74, 0x54000441, 0xD503201F, "SetUniformBackNumber: b.ne -> nop"),
-
-    # SetUniformFrontNumber (0x100895d98): force front number rendering
-    (0x100895DD0, 0x397DB268, 0x52800028, "SetUniformFrontNumber: ldrb w8,[x19,#0xf6c] -> mov w8, #1"),
-    (0x100895DDC, 0x54000461, 0xD503201F, "SetUniformFrontNumber: b.ne -> nop"),
-
-    # SetUniformPantsNumber (0x10089610c): force pants number rendering
-    (0x100896144, 0x397E5268, 0x52800028, "SetUniformPantsNumber: ldrb w8,[x19,#0xf94] -> mov w8, #1"),
-    (0x100896150, 0x54000461, 0xD503201F, "SetUniformPantsNumber: b.ne -> nop"),
-
     # Unlock selectable real stadiums in all match modes (Authentic, Exhibition, Tour, etc.)
     (0x104892B08, 0x540003A1, 0xD503201F, "GetSelectableStadium: b.ne -> nop"),
 ]

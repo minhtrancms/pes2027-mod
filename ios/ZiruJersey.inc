@@ -68,15 +68,15 @@ static const char* lookupPlayerShirtName(int64_t playerId, intptr_t slide) {
 }
 
 // Executed strictly ONCE upon player actor construction / uniform setup.
-// Never called per-frame or inside render ticks.
+// Sets shirt name string without modifying actor internal LOD/material flags.
 static void setActorShirtNameOnce(void* actor, int64_t playerId, intptr_t slide) {
-  if (!actor) return;
+  if (!actor || playerId <= 0) return;
 
   const char* pName = nullptr;
   if (playerId == 9901397) { pName = "ZIDANE"; }
   else if (playerId == 37576) { pName = "RONALDO"; }
   else if (playerId == 40291) { pName = "ÖZIL"; }
-  else if (playerId > 0) {
+  else {
     pName = lookupPlayerShirtName(playerId, slide);
   }
 
@@ -91,35 +91,12 @@ static void setActorShirtNameOnce(void* actor, int64_t playerId, intptr_t slide)
     }
   }
 
-  // Enable Name display and animation step on actor (do NOT override number flags or force FrontNumber)
-  uint8_t* p = (uint8_t*)actor + 0x1000;
-  p[0xaa7] = 1;
-  p[0xaaa] = 1;
-  p[0xaab] = 1;
-  p[0xaaf] = 1;
-  *(uint8_t*)((uint8_t*)actor + 0xf10) = 1;  // Uniform name display
-  *(uint8_t*)((uint8_t*)actor + 0x1aaf) = 1; // Animation/step active flag
-
-  // Ensure Scale X, Scale Y, and Font Scale are non-zero (default 1.0f)
-  if (*(float*)((uint8_t*)actor + 0xf38) <= 0.01f) *(float*)((uint8_t*)actor + 0xf38) = 1.0f;
-  if (*(float*)((uint8_t*)actor + 0xf3c) <= 0.01f) *(float*)((uint8_t*)actor + 0xf3c) = 1.0f;
-  if (*(float*)((uint8_t*)actor + 0xf40) <= 0.01f) *(float*)((uint8_t*)actor + 0xf40) = 1.0f;
-
   if (pName && pName[0]) {
     auto setShirt = (void (*)(void*, const char*))(0x10090ef34 + slide);
     if (setShirt) {
       std::string upper;
       for (const char* cp = pName; *cp; ++cp) upper += (char)toupper((unsigned char)*cp);
       setShirt(actor, upper.c_str());
-    }
-  }
-
-  void* nameTexActor = *(void**)((uint8_t*)actor + 0x1918);
-  if (nameTexActor) {
-    auto setNameFn = (void (*)(void*, void*))(0x100851098 + slide);
-    if (setNameFn) setNameFn(nameTexActor, (uint8_t*)actor + 0x1710);
-    if (*(float*)((uint8_t*)nameTexActor + 0x298) <= 0.01f) {
-      *(float*)((uint8_t*)nameTexActor + 0x298) = 1.0f;
     }
   }
 }
@@ -131,18 +108,6 @@ static void hookedSetupFromPlayerId(void* actor, int64_t playerId, void* path, i
   setActorShirtNameOnce(actor, playerId, gSlide);
 }
 
-static void nativeSetUniformNumber(void* actor, int requested) {
-  // Let the native game engine handle setting the uniform number cleanly according to the club kit rules
-  if (originalSetUniformNumber) originalSetUniformNumber(actor, requested);
-  if (!actor) return;
-  if (requested > 0 && requested <= 99) {
-    uint8_t* p = (uint8_t*)actor + 0x1000;
-    p[0xaa7] = 1; p[0xaaa] = 1; p[0xaab] = 1; p[0xaaf] = 1;
-    *(uint8_t*)((uint8_t*)actor + 0xf10) = 1;  // Uniform name display flag
-    *(uint8_t*)((uint8_t*)actor + 0x1aaf) = 1; // Step active flag
-  }
-}
-
 static void install() {
   intptr_t slide = 0; bool found = false;
   for (uint32_t i = 0; i < _dyld_image_count(); ++i) if (_dyld_get_image_header(i)->filetype == MH_EXECUTE) {
@@ -152,7 +117,8 @@ static void install() {
   gSlide = slide;
   size_t psize = (size_t)getpagesize();
 
-  // 1. Hook SetupFromPlayerId at real vtable slots (APlayerActorMobile & APlayerActorMobileHigh)
+  // Hook SetupFromPlayerId at real vtable slots (APlayerActorMobile & APlayerActorMobileHigh)
+  // to ensure player shirt names (including custom legends) are populated cleanly.
   const uintptr_t setupSlots[] = {0x105f287a0ULL, 0x105f29178ULL};
   const uintptr_t expectedSetup = 0x1008a02f0ULL;
   for (uintptr_t slot : setupSlots) {
@@ -168,23 +134,7 @@ static void install() {
       }
     }
   }
+  ZLog(@"[JERSEY_NATIVE] jersey name hooks active (native uniform pipeline preserved)");
+}
+}
 
-  // 2. SetUniformNumber hook at real vtable slots (APlayerActorMobile & APlayerActorMobileHigh)
-  const uintptr_t numSlots[] = {0x105f286c0ULL, 0x105f29098ULL};
-  const uintptr_t expectedSetNum = 0x10089f2e8ULL;
-  for (uintptr_t slot : numSlots) {
-    uintptr_t cur = *(uintptr_t*)(slot + slide);
-    uintptr_t unslid = (cur >= (uintptr_t)slide) ? (cur - (uintptr_t)slide) : cur;
-    if (cur == expectedSetNum + slide || (unslid & 0xFFFFFFULL) == (expectedSetNum & 0xFFFFFFULL)) {
-      vm_address_t p = (slot + slide) & ~(vm_address_t)(psize - 1);
-      if (vm_protect(mach_task_self(), p, psize, false, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY) == KERN_SUCCESS ||
-          vm_protect(mach_task_self(), p, psize, false, VM_PROT_READ | VM_PROT_WRITE) == KERN_SUCCESS) {
-        if (!originalSetUniformNumber) originalSetUniformNumber = (SetUniformNumberFn)cur;
-        *(uintptr_t*)(slot + slide) = (uintptr_t)nativeSetUniformNumber;
-        vm_protect(mach_task_self(), p, psize, false, VM_PROT_READ);
-      }
-    }
-  }
-  ZLog(@"[JERSEY_NATIVE] jersey name & uniform number hooks active (zero match overhead, native font pipeline)");
-}
-}
