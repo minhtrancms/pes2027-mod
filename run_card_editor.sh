@@ -11,7 +11,7 @@ if [ ! -f "$PYTHON_BIN" ]; then
 fi
 
 echo "=========================================================="
-echo "   ⚽ eFootball 2027 - Card Mod Studio Launcher"
+echo "   eFootball 2027 - Card Mod Studio Launcher"
 echo "=========================================================="
 echo "Python binary: $PYTHON_BIN"
 echo "Starting Card Mod Studio on http://127.0.0.1:8899 ..."

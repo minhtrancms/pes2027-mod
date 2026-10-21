@@ -18,6 +18,12 @@ from pathlib import Path
 
 # Paths
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+TOOLS_DIR = REPO_ROOT / "tools"
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
 RESPONSES_DIR = REPO_ROOT / "ziru-extra" / "responses"
 RECORDS_FILE = RESPONSES_DIR / "ZIRU_PLAYER_RECORDS.json"
 AGENTLIST_FILE = RESPONSES_DIR / "CmdGetMyclubAgentlist.json"
@@ -598,7 +604,10 @@ class CardEditorHandler(BaseHTTPRequestHandler):
             return
 
         try:
-            from tools.sync_from_efhub import sync_player_to_game
+            try:
+                from tools.sync_from_efhub import sync_player_to_game
+            except ImportError:
+                from sync_from_efhub import sync_player_to_game
             record = sync_player_to_game(pid)
             self.json_response({"success": True, "player": get_player_summary(pid, record)})
         except Exception as e:
