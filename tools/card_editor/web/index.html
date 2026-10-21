@@ -183,6 +183,12 @@
       background: rgba(255, 255, 255, 0.12);
     }
 
+    .btn-sm {
+      padding: 5px 12px;
+      font-size: 11px;
+      border-radius: 6px;
+    }
+
     /* Main Container Layout */
     .app-layout {
       display: grid;
@@ -1090,6 +1096,26 @@
               <option value="3">★★★ (3 Stars)</option>
             </select>
           </div>
+
+          <div class="form-group" style="grid-column: span 3;">
+            <label class="form-label" style="color: #ffb800; font-weight: 700;">⚡ Booster (Tăng Chỉ Số Đặc Biệt +3)</label>
+            <select class="form-control" id="playerBooster" style="border-color: rgba(255, 184, 0, 0.4); font-weight: 600;">
+              <option value="0">Không dùng Booster</option>
+              <option value="70">⚡ Striker Sense (+3 Nhận thức TC, Dứt điểm)</option>
+              <option value="12">⚡ Shooting (+3 Dứt điểm, Lực sút)</option>
+              <option value="15">⚡ Technique (+3 Kiểm soát bóng, Rê bóng)</option>
+              <option value="76">⚡ Fantasista (+3 Rê bóng, Giữ bóng hẹp)</option>
+              <option value="187">⚡ Ball Carrying (+3 Tốc độ, Rê bóng)</option>
+              <option value="28">⚡ Agility (+3 Tốc độ, Tăng tốc)</option>
+              <option value="16">⚡ Passing (+3 Chuyền sệt, Chuyền bổng)</option>
+              <option value="71">⚡ Duel (+3 Tì đè tranh chấp, Xoạc bóng)</option>
+              <option value="19">⚡ Defending (+3 Nhận thức PN, Xoạc bóng)</option>
+              <option value="20">⚡ Physical Contact (+3 Tì đè, Bật nhảy)</option>
+              <option value="170">⚡ Showtime Special (+3 Tốc độ, Dứt điểm, Tăng tốc)</option>
+              <option value="96">⚡ Phenomenal Finisher (+3 Dứt điểm, Kiểm soát)</option>
+              <option value="136">⚡ Epic Legend Slot (+3 Toàn diện)</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-grid-4" style="margin-top: 14px;">
@@ -1279,7 +1305,14 @@
 
       <!-- Skills Section -->
       <div>
-        <div class="section-title">Kỹ Năng & Show Time Skills</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div class="section-title" style="margin-bottom: 0;">Kỹ Năng & Show Time Skills</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" id="btnBuffShowtime" type="button" style="color: #ffb800; border-color: rgba(255, 184, 0, 0.4);">⚡ Buff Full ShowTime</button>
+            <button class="btn btn-secondary btn-sm" id="btnMaxAllSkills" type="button">🔥 Bật Tất Cả Skill</button>
+            <button class="btn btn-secondary btn-sm" id="btnClearSkills" type="button">Xóa hết</button>
+          </div>
+        </div>
         <div class="skills-grid" id="skillsGrid">
           <!-- Populated by JS -->
         </div>
@@ -1419,7 +1452,10 @@
       { id: 102, name: "Fortress (Pháo đài)", showtime: true },
       { id: 103, name: "Momentum Dribbling", showtime: true },
       { id: 104, name: "Phenomenal Finishing", showtime: true },
-      { id: 105, name: "Visionary Pass", showtime: true }
+      { id: 105, name: "Visionary Pass", showtime: true },
+      { id: 140, name: "Edge Crossing (Tạt điểm rơi)", showtime: true },
+      { id: 141, name: "Game-Changing Pass (Đổi cục diện)", showtime: true },
+      { id: 143, name: "Blitz Curler (Sút xoáy cừ khôi)", showtime: true }
     ];
 
     // UI Toast
@@ -1543,7 +1579,13 @@
 
       document.getElementById("previewStars").innerText = "★".repeat(rarity);
 
-      if (cardType === "SHOWTIME") {
+      const boosterSelect = document.getElementById("playerBooster");
+      const boosterVal = parseInt(boosterSelect ? boosterSelect.value : "0") || 0;
+      const boosterText = boosterSelect && boosterSelect.selectedIndex >= 0 ? boosterSelect.options[boosterSelect.selectedIndex].text : "";
+
+      if (boosterVal > 0) {
+        document.getElementById("previewBooster").innerText = boosterText.split(" (+")[0].toUpperCase();
+      } else if (cardType === "SHOWTIME") {
         document.getElementById("previewBooster").innerText = "⚡ PHENOMENAL FINISHING";
       } else if (cardType === "EPIC") {
         document.getElementById("previewBooster").innerText = "⚡ BOOSTER +3 TECHNIQUE";
@@ -1554,7 +1596,7 @@
       calculateLiveOVR();
     }
 
-    ["playerName", "playerPosition", "cardType", "cardRarity"].forEach(id => {
+    ["playerName", "playerPosition", "cardType", "cardRarity", "playerBooster"].forEach(id => {
       document.getElementById(id).addEventListener("input", syncLiveCardPreview);
       document.getElementById(id).addEventListener("change", syncLiveCardPreview);
     });
@@ -1640,6 +1682,7 @@
         document.getElementById("playerHeight").value = data.height;
         document.getElementById("playerWeight").value = data.weight;
         document.getElementById("preferredFoot").value = data.preferred_foot;
+        document.getElementById("playerBooster").value = data.booster_id || "0";
 
         // Stats
         if (data.stats) {
@@ -1696,7 +1739,7 @@
         preferred_foot: parseInt(document.getElementById("preferredFoot").value),
         stats: stats,
         skills: currentSkills,
-        booster_id: 1
+        booster_id: parseInt(document.getElementById("playerBooster").value || "0")
       };
 
       try {
@@ -1861,6 +1904,38 @@
       };
       reader.readAsDataURL(file);
     }
+
+    // Quick buff handlers
+    document.getElementById("btnBuffShowtime").addEventListener("click", () => {
+      [104, 103, 102, 105, 140, 141, 143].forEach(id => {
+        currentSkills[id] = true;
+      });
+      const bSel = document.getElementById("playerBooster");
+      if (bSel && bSel.value === "0") {
+        const pos = document.getElementById("playerPosition").value;
+        if (pos === "13" || pos === "12") bSel.value = "70";
+        else if (pos === "9" || pos === "6") bSel.value = "15";
+        else if (pos === "2" || pos === "5") bSel.value = "19";
+        else bSel.value = "28";
+      }
+      renderSkillsGrid();
+      syncLiveCardPreview();
+      showToast("⚡ Đã buff Full ShowTime Skills & Booster!");
+    });
+
+    document.getElementById("btnMaxAllSkills").addEventListener("click", () => {
+      SKILLS_DEF.forEach(s => { currentSkills[s.id] = true; });
+      renderSkillsGrid();
+      syncLiveCardPreview();
+      showToast("🔥 Đã kích hoạt toàn bộ 37 kỹ năng!");
+    });
+
+    document.getElementById("btnClearSkills").addEventListener("click", () => {
+      currentSkills = {};
+      renderSkillsGrid();
+      syncLiveCardPreview();
+      showToast("Đã xóa trắng danh sách kỹ năng");
+    });
 
     // New Player Button
     document.getElementById("btnNewPlayer").addEventListener("click", () => {

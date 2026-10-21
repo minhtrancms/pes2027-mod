@@ -109,7 +109,7 @@ def get_defensive_play_style(pos, st1):
     if st1 in (11, 12, 15, 21): return 30
     return 27
 
-# Skill definitions (index in parameters[70..100])
+# Skill definitions (index in parameters[70..143])
 SKILLS_LIST = [
     (70, "Scissors Feint"),
     (71, "Double Touch"),
@@ -146,8 +146,73 @@ SKILLS_LIST = [
     (102, "Fortress (Show Time)"),
     (103, "Momentum Dribbling (Show Time)"),
     (104, "Phenomenal Finishing (Show Time)"),
-    (105, "Visionary Pass (Show Time)")
+    (105, "Visionary Pass (Show Time)"),
+    (140, "Edge Crossing (Show Time)"),
+    (141, "Game-Changing Pass (Show Time)"),
+    (143, "Blitz Curler (Show Time)")
 ]
+
+# Boosters list: (Booster ID, Name & Effect)
+BOOSTERS_LIST = [
+    (0, "Không dùng Booster"),
+    (70, "Striker Sense (+3 Nhận thức TC, Dứt điểm)"),
+    (12, "Shooting (+3 Dứt điểm, Lực sút)"),
+    (15, "Technique (+3 Kiểm soát bóng, Rê bóng)"),
+    (76, "Fantasista (+3 Rê bóng, Giữ bóng hẹp)"),
+    (187, "Ball Carrying (+3 Tốc độ, Rê bóng)"),
+    (28, "Agility (+3 Tốc độ, Tăng tốc)"),
+    (16, "Passing (+3 Chuyền sệt, Chuyền bổng)"),
+    (71, "Duel (+3 Tì đè tranh chấp, Xoạc bóng)"),
+    (19, "Defending (+3 Nhận thức PN, Xoạc bóng)"),
+    (20, "Physical Contact (+3 Tì đè, Bật nhảy)"),
+    (170, "Showtime Special (+3 Tốc độ, Dứt điểm, Tăng tốc)"),
+    (96, "Phenomenal Finisher (+3 Dứt điểm, Kiểm soát)"),
+    (136, "Epic Legend Slot (+3 Toàn diện)")
+]
+BOOSTERS_MAP = dict(BOOSTERS_LIST)
+
+# Map from parameter index to Konami SkillCard ID
+PARAM_TO_SKILL_ID = {
+    104: 22,  # Phenomenal Finishing
+    103: 21,  # Momentum Dribbling
+    102: 10,  # Fortress
+    105: 45,  # Visionary Pass
+    143: 72,  # Blitz Curler
+    140: 14,  # Edge Crossing
+    141: 42,  # Game-Changing Pass
+    70: 0,    # Scissors Feint
+    71: 2,    # Double Touch
+    72: 3,    # Flip Flap
+    73: 4,    # Marseille Turn
+    74: 6,    # Sombrero
+    75: 7,    # Cross Over Turn
+    76: 15,   # Cut Behind & Turn
+    77: 17,   # Scotch Move
+    78: 20,   # Heading
+    79: 26,   # Long Range Shooting
+    80: 27,   # Chip Shot Control
+    81: 28,   # Long Range Curler
+    82: 31,   # Knuckle Shot
+    83: 33,   # Dipping Shot
+    84: 34,   # Rising Shot
+    85: 36,   # Acrobatic Finishing
+    86: 37,   # Heel Trick
+    87: 43,   # First-time Shot
+    88: 44,   # One-touch Pass
+    89: 46,   # Through Passing
+    90: 47,   # Weighted Pass
+    91: 54,   # Pinpoint Crossing
+    92: 55,   # Outside Curler
+    93: 56,   # No Look Pass
+    94: 64,   # Low Lofted Pass
+    95: 67,   # Interception
+    96: 69,   # Man Marking
+    97: 70,   # Blocker
+    98: 38,   # Acrobatic Clear
+    99: 48,   # Captaincy
+    100: 49,  # Super-sub
+    101: 19   # Fighting Spirit
+}
 
 # Team Names mapping from ZIRU_2027_TEAM_NAMES.json
 TEAMS_FILE = RESPONSES_DIR / "ZIRU_2027_TEAM_NAMES.json"
@@ -567,7 +632,9 @@ class CardEditorHandler(BaseHTTPRequestHandler):
             "stats": stats,
             "skills": skills,
             "thumbnail": summary["thumbnail"],
-            "booster_id": gp.get("initial_booster_id_list", [0, 0, 0])[0]
+            "booster_id": gp.get("initial_booster_id_list", [0, 0, 0])[0],
+            "additional_skill_id": gp.get("additional_skill_id", []),
+            "boosters_list": [{"id": b[0], "name": b[1]} for b in BOOSTERS_LIST]
         })
 
     def api_get_player_image(self, pid):
@@ -754,6 +821,16 @@ class CardEditorHandler(BaseHTTPRequestHandler):
         for idx, _ in SKILLS_LIST:
             params[idx] = 1 if skills.get(str(idx)) else 0
 
+        # Collect additional_skill_id (prioritize ShowTime skills first)
+        add_skills = []
+        st_priority = [22, 21, 10, 45, 72, 14, 42]
+        for p_idx, s_id in PARAM_TO_SKILL_ID.items():
+            if skills.get(str(p_idx)):
+                if s_id not in add_skills:
+                    add_skills.append(s_id)
+        add_skills.sort(key=lambda x: 0 if x in st_priority else 1)
+        add_skills = add_skills[:5]
+
         serial = gp.get("gameplayer_id", {}).get("serial") or (359042717000000000 + int(pid) % 1000000)
         uniform_num = int(data.get("uniform_number", gp.get("uniform_number", 9)))
         card_type = data.get("card_type", gp.get("type", "EPIC"))
@@ -765,7 +842,13 @@ class CardEditorHandler(BaseHTTPRequestHandler):
         if len(params) >= 70:
             params[61] = play_style
             params[62] = def_play_style
+
         booster_id = int(data.get("booster_id", 0))
+        booster_list = [booster_id, 136 if booster_id > 0 else 0, 0]
+        if len(params) >= 145:
+            params[142] = booster_id
+            params[143] = 136 if booster_id > 0 else 0
+            params[144] = 0
 
         updated_record = {
             "name": name,
@@ -788,18 +871,57 @@ class CardEditorHandler(BaseHTTPRequestHandler):
                 },
                 "is_lock": "YES",
                 "play_style": [play_style, def_play_style],
-                "initial_base_team_id": 0,
+                "initial_base_team_id": gp.get("initial_base_team_id", 0),
                 "initial_base_national_team_id": gp.get("initial_base_national_team_id", 0),
                 "parameters": params,
                 "original_parameters": params,
                 "default_rarity": rarity,
                 "type": card_type,
                 "acquisition_date": int(time.time()),
-                "initial_booster_id_list": [booster_id, 0, 0]
+                "initial_booster_id_list": booster_list,
+                "additional_skill_id": add_skills
             }
         }
         records[pid] = updated_record
         save_records(records)
+
+        # 1. Update SQLite ziru_save.db table 'players'
+        try:
+            db_path = REPO_ROOT / "ziru_save.db"
+            if db_path.exists():
+                conn = sqlite3.connect(db_path)
+                c = conn.cursor()
+                now_ts = int(time.time() * 1000)
+                c.execute("INSERT OR REPLACE INTO players (serial, player_id, player_json, updated_at) VALUES (?, ?, ?, ?)",
+                          (serial, int(pid), json.dumps(updated_record["gameplayer"]), now_ts))
+                conn.commit()
+                conn.close()
+        except Exception as e:
+            print(f"[WARN] Failed to write player to ziru_save.db: {e}")
+
+        # 2. Update CmdLogin.json if player is in owned squad
+        try:
+            cmd_login_file = RESPONSES_DIR / "CmdLogin.json"
+            if cmd_login_file.exists():
+                with open(cmd_login_file, "r", encoding="utf-8") as f:
+                    cl_data = json.load(f)
+                gp_list = cl_data.get("entry_info", {}).get("gameplayer_list", [])
+                found_cl = False
+                for item in gp_list:
+                    if item.get("gameplayer_id", {}).get("id") == int(pid):
+                        item["parameters"] = params
+                        item["original_parameters"] = params
+                        item["initial_booster_id_list"] = booster_list
+                        item["additional_skill_id"] = add_skills
+                        item["type"] = card_type
+                        found_cl = True
+                        break
+                if found_cl:
+                    with open(cmd_login_file, "w", encoding="utf-8") as f:
+                        json.dump(cl_data, f, ensure_ascii=False)
+        except Exception as e:
+            print(f"[WARN] Failed to update CmdLogin.json: {e}")
+
         self.json_response({"success": True, "player": get_player_summary(pid, updated_record)})
 
     def api_list_boxes(self):
@@ -879,16 +1001,12 @@ class CardEditorHandler(BaseHTTPRequestHandler):
         self.json_response({"success": True, "message": f"Assigned player {pid} (No. {uni}) to Squad 9 Starter #{slot}"})
 
     def api_sync_device(self):
-        if not HAS_DEVICE:
-            self.json_response({"error": "pymobiledevice3 not installed in this environment"}, 500)
-            return
-
         try:
-            # Run deploy_to_device.py directly
             import subprocess
-            py_bin = sys.executable
-            deploy_script = REPO_ROOT / "tools" / "deploy_to_device.py"
-            res = subprocess.run([py_bin, str(deploy_script)], capture_output=True, text=True, timeout=120)
+            pipx_py = Path("/Users/nhatminh/.local/pipx/.cache/26d7aa47311ea6b/bin/python3")
+            py_bin = str(pipx_py) if pipx_py.exists() else sys.executable
+            deploy_script = REPO_ROOT / "tools" / "restore_all_to_device.py"
+            res = subprocess.run([py_bin, str(deploy_script)], capture_output=True, text=True, timeout=180)
             if res.returncode == 0:
                 self.json_response({"success": True, "log": res.stdout})
             else:
