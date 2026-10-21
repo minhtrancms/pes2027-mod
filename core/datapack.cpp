@@ -306,11 +306,12 @@ bool quickVerify(const Layout& L, const std::string& id, const std::string& appV
   }
   // links must point into this data set
   char buf[4096];
+  struct stat lst;
   for (const char* n : {"pak", "cpk"}) {
     std::string link = L.documents + "/" + n;
     ssize_t r = readlink(link.c_str(), buf, sizeof buf - 1);
     std::string want = dataDir(L, id) + "/" + n;
-    if (r <= 0 || (std::string(buf, (size_t)r) != want && stat(link.c_str(), &st) != 0)) {
+    if (r <= 0 || (std::string(buf, (size_t)r) != want && stat(link.c_str(), &lst) != 0)) {
       std::string e2;
       if (!relink(link, want, e2)) { err = e2; return false; }
     }
