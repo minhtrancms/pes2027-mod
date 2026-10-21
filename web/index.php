@@ -1535,7 +1535,7 @@ $cleanNotice = str_replace(['(', ')'], ['', ''], $versionData['notice']);
                 showToast('Đang tải file save ' + code + '...');
                 window.location.href = '/api/save.php?action=download&code=' + code;
             } catch (err) {
-                info.textContent = '❌ ' + err.message;
+                info.textContent = 'Lỗi: ' + err.message;
                 showToast(err.message, true);
             } finally {
                 btn.disabled = false;
@@ -1570,14 +1570,14 @@ $cleanNotice = str_replace(['(', ')'], ['', ''], $versionData['notice']);
 
                 assignedCode.textContent = data.code;
                 display.style.display = 'flex';
-                dropText.textContent = `✅ Đã lưu ${file.name}! Nhận mã thành công.`;
-                showToast(`🎉 Thành công! Mã của bạn là: ${data.code}`);
+                dropText.textContent = `Đã lưu ${file.name}! Nhận mã thành công.`;
+                showToast(`Thành công! Mã của bạn là: ${data.code}`);
 
                 // Tự động điền sang ô tải save
                 const codeInput = document.getElementById('webCloudCode');
                 if (codeInput) codeInput.value = data.code;
             } catch (err) {
-                dropText.textContent = '❌ Lỗi: ' + err.message;
+                dropText.textContent = 'Lỗi: ' + err.message;
                 showToast(err.message, true);
             } finally {
                 input.value = '';

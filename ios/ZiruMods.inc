@@ -195,7 +195,7 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
   self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Đóng" style:UIBarButtonItemStyleDone target:self action:@selector(closeMods)];
 
   // Top Tabs
-  self.tabs = [[UISegmentedControl alloc] initWithItems:@[@"☁️ Save Cloud (6 số)", @"💾 Tệp Máy", @"🏟️ Mod Sân"]];
+  self.tabs = [[UISegmentedControl alloc] initWithItems:@[@"Save Cloud (6 số)", @"Tệp Máy", @"Mod Sân"]];
   self.tabs.selectedSegmentIndex = 0;
   self.tabs.backgroundColor = [UIColor colorWithWhite:0.12 alpha:0.9];
   self.tabs.selectedSegmentTintColor = PESLime();
@@ -244,7 +244,7 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
   UILabel* descExport = [self makeDescLabel:@"Sao lưu toàn bộ đội hình, cầu thủ, GP/Coins lên máy chủ pes.minhgame.com. Hệ thống sẽ cấp mã 6 chữ số để khôi phục lại bất kỳ lúc nào."];
 
   self.btnCloudExport = [UIButton buttonWithType:UIButtonTypeSystem];
-  [self.btnCloudExport setTitle:@"☁️  LƯU LÊN CLOUD & LẤY MÃ 6 SỐ" forState:UIControlStateNormal];
+  [self.btnCloudExport setTitle:@"LƯU LÊN CLOUD & LẤY MÃ 6 SỐ" forState:UIControlStateNormal];
   self.btnCloudExport.backgroundColor = PESLime();
   self.btnCloudExport.tintColor = PESNight();
   self.btnCloudExport.titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightHeavy];
@@ -289,7 +289,7 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
   self.txtCloudCode.delegate = self;
 
   self.btnCloudImport = [UIButton buttonWithType:UIButtonTypeSystem];
-  [self.btnCloudImport setTitle:@"⬇️  TẢI & KHÔI PHỤC DATABASE" forState:UIControlStateNormal];
+  [self.btnCloudImport setTitle:@"TẢI & KHÔI PHỤC DATABASE" forState:UIControlStateNormal];
   self.btnCloudImport.backgroundColor = PESCyan();
   self.btnCloudImport.tintColor = PESNight();
   self.btnCloudImport.titleLabel.font = [UIFont systemFontOfSize:15 weight:UIFontWeightHeavy];
@@ -394,7 +394,7 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
   UILabel* desc = [self makeDescLabel:@"Xuất dữ liệu save thành file .zip để lưu vào ứng dụng Tệp, chia sẻ qua AirDrop, Google Drive hoặc nạp lại trực tiếp từ file trên máy:"];
 
   self.btnLocalExport = [UIButton buttonWithType:UIButtonTypeSystem];
-  [self.btnLocalExport setTitle:@"📤  Xuất File Save (.zip) ra Tệp / Chia sẻ" forState:UIControlStateNormal];
+  [self.btnLocalExport setTitle:@"Xuất File Save (.zip) ra Tệp / Chia sẻ" forState:UIControlStateNormal];
   self.btnLocalExport.backgroundColor = [UIColor colorWithWhite:0.18 alpha:0.95];
   self.btnLocalExport.tintColor = UIColor.whiteColor;
   self.btnLocalExport.titleLabel.font = [UIFont systemFontOfSize:14 weight:UIFontWeightBold];
@@ -402,7 +402,7 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
   [self.btnLocalExport addTarget:self action:@selector(handleLocalExport) forControlEvents:UIControlEventTouchUpInside];
 
   self.btnLocalImport = [UIButton buttonWithType:UIButtonTypeSystem];
-  [self.btnLocalImport setTitle:@"📥  Chọn File Save (.db / .zip) từ Tệp để nạp" forState:UIControlStateNormal];
+  [self.btnLocalImport setTitle:@"Chọn File Save (.db / .zip) từ Tệp để nạp" forState:UIControlStateNormal];
   self.btnLocalImport.backgroundColor = [UIColor colorWithWhite:0.18 alpha:0.95];
   self.btnLocalImport.tintColor = PESCyan();
   self.btnLocalImport.titleLabel.font = [UIFont systemFontOfSize:14 weight:UIFontWeightBold];
@@ -616,10 +616,10 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
           double sizeKb = [json[@"size_kb"] doubleValue];
           [self saveRecentCode:code];
           self.txtCloudCode.text = code;
-          self.lblCloudStatus.text = [NSString stringWithFormat:@"✅ Đã lưu! Mã của bạn: %@", code];
+          self.lblCloudStatus.text = [NSString stringWithFormat:@"Đã lưu! Mã của bạn: %@", code];
 
-          NSString* alertMsg = [NSString stringWithFormat:@"Mã khôi phục Cloud của bạn:\n\n👉  %@  👈\n\nDung lượng: %.1f KB\n\nDữ liệu đã lưu an toàn trên máy chủ pes.minhgame.com.\nHãy ghi nhớ hoặc sao chép mã 6 số này để khôi phục bất cứ lúc nào.", code, sizeKb];
-          UIAlertController* a = [UIAlertController alertControllerWithTitle:@"🎉 Lưu Cloud Thành Công!" message:alertMsg preferredStyle:UIAlertControllerStyleAlert];
+          NSString* alertMsg = [NSString stringWithFormat:@"Mã khôi phục Cloud của bạn:\n\n[ %@ ]\n\nDung lượng: %.1f KB\n\nDữ liệu đã lưu an toàn trên máy chủ pes.minhgame.com.\nHãy ghi nhớ hoặc sao chép mã 6 số này để khôi phục bất cứ lúc nào.", code, sizeKb];
+          UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Lưu Cloud Thành Công!" message:alertMsg preferredStyle:UIAlertControllerStyleAlert];
           [a addAction:[UIAlertAction actionWithTitle:@"Sao chép mã" style:UIAlertActionStyleDefault handler:^(UIAlertAction*) {
             [UIPasteboard generalPasteboard].string = code;
           }]];
@@ -691,9 +691,9 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
 
       if (ok) {
         [self saveRecentCode:code];
-        self.lblCloudStatus.text = [NSString stringWithFormat:@"✅ Đã khôi phục save mã %@!", code];
-        NSString* successMsg = [NSString stringWithFormat:@"Đã khôi phục toàn bộ database và đội hình từ mã [%@] thành công!\n\n⚠️ Vui lòng vuốt TẮT HẲN GAME (kill app) và mở lại để hệ thống nạp dữ liệu mới.", code];
-        UIAlertController* a = [UIAlertController alertControllerWithTitle:@"✅ Khôi Phục Thành Công" message:successMsg preferredStyle:UIAlertControllerStyleAlert];
+        self.lblCloudStatus.text = [NSString stringWithFormat:@"Đã khôi phục save mã %@!", code];
+        NSString* successMsg = [NSString stringWithFormat:@"Đã khôi phục toàn bộ database và đội hình từ mã [%@] thành công!\n\nVui lòng vuốt TẮT HẲN GAME (kill app) và mở lại để hệ thống nạp dữ liệu mới.", code];
+        UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Khôi Phục Thành Công" message:successMsg preferredStyle:UIAlertControllerStyleAlert];
         [a addAction:[UIAlertAction actionWithTitle:@"Đóng game ngay" style:UIAlertActionStyleDestructive handler:^(UIAlertAction*) {
           exit(0);
         }]];
@@ -769,7 +769,7 @@ static BOOL extractAndRestoreSaveArchive(NSString* zipPath, NSString** outError)
     if (scoped) [u stopAccessingSecurityScopedResource];
 
     if (ok) {
-      [self showAlertWithTitle:@"✅ Khôi phục thành công" message:@"Đã nhập database từ Tệp. Hãy đóng hẳn game và mở lại để áp dụng."];
+      [self showAlertWithTitle:@"Khôi phục thành công" message:@"Đã nhập database từ Tệp. Hãy đóng hẳn game và mở lại để áp dụng."];
     } else {
       [self showAlertWithTitle:@"Nhập thất bại" message:err ?: @"Không thể sao chép database."];
     }

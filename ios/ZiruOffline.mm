@@ -1866,7 +1866,7 @@ static PESPressButton* makeButton(NSString* title, BOOL primary) {
   wmContainer.translatesAutoresizingMaskIntoConstraints = NO;
 
   self.watermarkLabel = [UILabel new];
-  self.watermarkLabel.text = @"⚡ Made by iOSVN";
+  self.watermarkLabel.text = @"Made by iOSVN";
   self.watermarkLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightBold];
   self.watermarkLabel.textColor = PESLime();
   self.watermarkLabel.textAlignment = NSTextAlignmentCenter;
