@@ -458,6 +458,8 @@ class CardEditorHandler(BaseHTTPRequestHandler):
             self.api_get_player_image(query.get("id", [None])[0])
         elif path == "/api/boxes":
             self.api_list_boxes()
+        elif path == "/api/konami/search":
+            self.api_search_konami_players(query)
         else:
             self.send_response(404)
             self.end_headers()
@@ -552,6 +554,36 @@ class CardEditorHandler(BaseHTTPRequestHandler):
         pinned = ["37576", "9901397", "40291"]
         items.sort(key=lambda x: (0 if str(x["id"]) in pinned else 1, x["name"]))
         self.json_response({"players": items[:150], "total": len(records)})
+
+    def api_search_konami_players(self, query):
+        q = query.get("q", [""])[0].strip().lower()
+        json_file = Path(__file__).parent / "konami_all_players.json"
+        if not json_file.exists():
+            self.json_response({"results": [], "total": 0, "error": "konami_all_players.json not found"})
+            return
+        
+        global _CACHED_KONAMI_PLAYERS
+        if "_CACHED_KONAMI_PLAYERS" not in globals() or _CACHED_KONAMI_PLAYERS is None:
+            try:
+                with open(json_file, "r", encoding="utf-8") as f:
+                    _CACHED_KONAMI_PLAYERS = json.load(f)
+            except Exception as e:
+                _CACHED_KONAMI_PLAYERS = []
+
+        if not q:
+            self.json_response({"results": _CACHED_KONAMI_PLAYERS[:50], "total": len(_CACHED_KONAMI_PLAYERS)})
+            return
+
+        matches = []
+        for p in _CACHED_KONAMI_PLAYERS:
+            p_name = p.get("name", "").lower()
+            p_short = p.get("short", "").lower()
+            p_id = str(p.get("id", ""))
+            if q in p_name or q in p_short or q == p_id:
+                matches.append(p)
+                if len(matches) >= 60:
+                    break
+        self.json_response({"results": matches, "query": q, "total_db": len(_CACHED_KONAMI_PLAYERS)})
 
     def api_get_player(self, pid):
         if not pid:
