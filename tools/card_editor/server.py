@@ -149,6 +149,132 @@ SKILLS_LIST = [
     (105, "Visionary Pass (Show Time)")
 ]
 
+# Team Names mapping from ZIRU_2027_TEAM_NAMES.json
+TEAMS_FILE = RESPONSES_DIR / "ZIRU_2027_TEAM_NAMES.json"
+TEAMS_MAP = {}
+if TEAMS_FILE.exists():
+    try:
+        with open(TEAMS_FILE, "r", encoding="utf-8") as f:
+            TEAMS_MAP = json.load(f)
+    except Exception:
+        TEAMS_MAP = {}
+
+# Featured & Famous Card Direct ID Map
+KNOWN_PLAYERS = {
+    "37576": "RONALDO R9",
+    "9901397": "ZINEDINE ZIDANE",
+    "40291": "MESUT ÖZIL",
+    "88032334054874": "LIONEL MESSI",
+    "88029649706260": "ROBERT LEWANDOWSKI",
+    "88040387117922": "NEYMAR JR",
+    "88040387251711": "LAMINE YAMAL",
+    "87963883146703": "PEDRI",
+    "88030992010723": "GAVI",
+    "88044145253792": "FRENKIE DE JONG",
+    "88039581945323": "ALEJANDRO BALDE",
+    "89129429769559": "MARC-ANDRÉ TER STEGEN",
+    "89129966765504": "RONALD ARAÚJO",
+    "88029918174624": "F. DE JONG (CB)",
+    "88030455139819": "JULES KOUNDÉ",
+    "88036360589289": "JOHAN CRUYFF",
+    "88032334188027": "IKER CASILLAS",
+    "88036360723168": "PAOLO MALDINI",
+    "88040387251641": "ROBERTO CARLOS",
+    "89071179308448": "RUUD GULLIT",
+    "88040387180670": "PATRICK VIEIRA",
+    "89133456301399": "DIEGO MARADONA",
+}
+
+# Base Player IDs to Real Names Map
+KNOWN_BASE_PLAYERS = {
+    # Legends & Icons
+    4073: "JOHAN CRUYFF",
+    812: "RUUD GULLIT",
+    820: "PATRICK VIEIRA",
+    852: "PAOLO MALDINI",
+    866: "ALESSANDRO NESTA",
+    867: "KAKÁ",
+    982: "ANDREA PIRLO",
+    983: "GENNARO GATTUSO",
+    1004: "DAVID BECKHAM",
+    1005: "PAUL SCHOLES",
+    1021: "STEVEN GERRARD",
+    1022: "MICHAEL OWEN",
+    1046: "FRANK LAMPARD",
+    1047: "DIDIER DROGBA",
+    1089: "THIERRY HENRY",
+    1183: "ROBERTO CARLOS",
+    1202: "RIVALDO",
+    1203: "ROMÁRIO",
+    1204: "BEBETO",
+    2379: "MANUEL NEUER",
+    3214: "RONALDINHO GAÚCHO",
+    37576: "RONALDO R9",
+    9901397: "ZINEDINE ZIDANE",
+    40291: "MESUT ÖZIL",
+    134577: "PATRICK VIEIRA",
+    134616: "FRANZ BECKENBAUER",
+    134617: "K. RUMMENIGGE",
+    134620: "FRANK RIJKAARD",
+    134624: "CAFU",
+    134631: "DENNIS BERGKAMP",
+    134632: "MARCO VAN BASTEN",
+    134633: "CLARENCE SEEDORF",
+    134634: "RUUD GULLIT",
+    134639: "DIEGO MARADONA",
+    134640: "GABRIEL BATISTUTA",
+    134641: "JAVIER ZANETTI",
+    134648: "DECO",
+    134649: "CARLES PUYOL",
+    134650: "XAVI HERNÁNDEZ",
+    134651: "ANDRÉS INIESTA",
+    134652: "IKER CASILLAS",
+    134653: "PETR CECH",
+
+    # Modern Superstars & POTW Highlights
+    4522: "CRISTIANO RONALDO",
+    7511: "LIONEL MESSI",
+    16346: "CASEMIRO",
+    16362: "THIBAUT COURTOIS",
+    33185: "LUKA MODRIĆ",
+    33702: "TONI KROOS",
+    34881: "SERGIO RAMOS",
+    35496: "ROBERT LEWANDOWSKI",
+    40240: "NEYMAR JR",
+    40352: "LUIS SUÁREZ",
+    41126: "ANTOINE GRIEZMANN",
+    44379: "KEVIN DE BRUYNE",
+    45097: "SON HEUNG-MIN",
+    45993: "HARRY KANE",
+    57123: "MOHAMED SALAH",
+    104677: "BRUNO FERNANDES",
+    104717: "MARCUS RASHFORD",
+    108959: "RODRI",
+    109941: "BERNARDO SILVA",
+    110718: "OUSMANE DEMBÉLÉ",
+    113960: "KYLIAN MBAPPÉ",
+    114105: "LAUTARO MARTÍNEZ",
+    115881: "ACHRAF HAKIMI",
+    116543: "VINÍCIUS JÚNIOR",
+    129369: "JUDE BELLINGHAM",
+    132933: "RODRI",
+    133543: "ERLING HAALAND",
+    134589: "BUKAYO SAKA",
+    134594: "MARTIN ØDEGAARD",
+    134595: "DECLAN RICE",
+    134604: "PHIL FODEN",
+    134605: "BERNARDO SILVA",
+    134608: "RÚBEN DIAS",
+    137962: "MOHAMED SALAH",
+    137990: "VIRGIL VAN DIJK",
+    138000: "ALISSON BECKER",
+    138392: "T. ALEXANDER-ARNOLD",
+    139679: "FEDERICO VALVERDE",
+    141308: "THEO HERNÁNDEZ",
+    160577: "EDUARDO CAMAVINGA",
+    166176: "AURÉLIEN TCHOUAMÉNI",
+}
+
 def load_records():
     if not RECORDS_FILE.exists():
         return {}
@@ -161,6 +287,40 @@ def load_records():
 def save_records(records):
     with open(RECORDS_FILE, "w", encoding="utf-8") as f:
         json.dump(records, f, indent=2, ensure_ascii=False)
+
+def get_player_name(pid_str, item, pos_name):
+    # 1. Direct card match
+    if pid_str in KNOWN_PLAYERS:
+        return KNOWN_PLAYERS[pid_str]
+
+    # 2. Base ID match
+    try:
+        base_id = int(pid_str) & 0xFFFFFF
+        if base_id in KNOWN_BASE_PLAYERS:
+            return KNOWN_BASE_PLAYERS[base_id]
+    except Exception:
+        pass
+
+    # 3. Check explicit name in record
+    gp = item.get("gameplayer", {})
+    if item.get("name"):
+        return item["name"]
+    if gp.get("name"):
+        return gp["name"]
+
+    # 4. Construct descriptive title using Team & Position
+    tid = str(gp.get("initial_base_team_id", 0))
+    nid = str(gp.get("initial_base_national_team_id", 0))
+    tinfo = TEAMS_MAP.get(tid) or TEAMS_MAP.get(nid) or {}
+    tname = tinfo.get("name") or tinfo.get("short") or ""
+    uni = gp.get("uniform_number") or 0
+
+    if tname:
+        if uni > 0:
+            return f"{pos_name} • {tname} #{uni}"
+        return f"{pos_name} • {tname}"
+
+    return f"{pos_name} • ID {pid_str[-6:]}"
 
 def get_player_summary(pid, item):
     gp = item.get("gameplayer", {})
@@ -179,15 +339,21 @@ def get_player_summary(pid, item):
             ovr = int((params[14] + params[15] + params[16] + params[20] + params[24] + params[25]) / 6)
         ovr = max(60, min(105, ovr + 8))
 
-    name = item.get("name") or gp.get("name") or f"Player {pid}"
-    if pid == "37576": name = "RONALDO R9"
-    elif pid == "9901397": name = "ZINEDINE ZIDANE"
-    elif pid == "40291": name = "MESUT ÖZIL"
+    pid_str = str(pid)
+    name = get_player_name(pid_str, item, pos_name)
+
+    tid = str(gp.get("initial_base_team_id", 0))
+    nid = str(gp.get("initial_base_national_team_id", 0))
+    tinfo = TEAMS_MAP.get(tid) or TEAMS_MAP.get(nid) or {}
+    team_name = tinfo.get("name") or "Free Agent"
+    team_short = tinfo.get("short") or "PES"
 
     thumb_url = f"/api/player/image?id={pid}"
     return {
-        "id": pid,
+        "id": pid_str,
         "name": name,
+        "team": team_name,
+        "team_short": team_short,
         "position": pos_name,
         "uniform_number": gp.get("uniform_number", 9),
         "ovr": ovr,
@@ -409,12 +575,96 @@ class CardEditorHandler(BaseHTTPRequestHandler):
             self.serve_fallback_svg()
             return
         img_file = THUMBNAIL_DIR / f"{pid}.png"
-        if not img_file.exists():
-            img_file = REPO_ROOT / "ziru-extra" / "responses" / "ziru_blank.png"
-        if not img_file.exists():
-            self.serve_fallback_svg()
+        if img_file.exists():
+            self.serve_file(img_file, "image/png")
             return
-        self.serve_file(img_file, "image/png")
+        
+        # Check base id image if available
+        try:
+            base_id = int(pid) & 0xFFFFFF
+            base_img = THUMBNAIL_DIR / f"{base_id}.png"
+            if base_img.exists():
+                self.serve_file(base_img, "image/png")
+                return
+        except Exception:
+            pass
+
+        # Dynamically render aesthetic eFootball-styled SVG card
+        self.serve_player_card_svg(str(pid))
+
+    def serve_player_card_svg(self, pid):
+        records = load_records()
+        record = records.get(pid, {})
+        summary = get_player_summary(pid, record) if record else {
+            "name": f"Player {pid[-6:]}",
+            "position": "CF",
+            "ovr": 90,
+            "team_short": "PES",
+            "card_type": "EPIC"
+        }
+
+        pos = summary.get("position", "CF")
+        ovr = summary.get("ovr", 90)
+        card_type = summary.get("card_type", "EPIC")
+        team_short = summary.get("team_short", "PES")
+        name = summary.get("name", "PLAYER")
+        
+        # Determine position color
+        if pos in ["CF", "SS", "LWF", "RWF"]:
+            pos_color = "#ff4757"  # Red / Coral for Attackers
+        elif pos in ["AMF", "CMF", "LMF", "RMF"]:
+            pos_color = "#00e5ff"  # Cyan for Midfielders
+        elif pos == "DMF":
+            pos_color = "#2ed573"  # Emerald Green for DMF
+        elif pos in ["CB", "LB", "RB"]:
+            pos_color = "#ffa502"  # Amber Orange for Defenders
+        else:
+            pos_color = "#3b82f6"  # Blue for GK
+
+        # Initials
+        words = [w for w in name.replace("•", " ").split() if not w.startswith("#")]
+        initials = "".join(w[0] for w in words[:2]).upper() if words else pos
+
+        # Display name shortened for card
+        display_name = name.split("•")[0].strip() if "•" in name else name
+        if len(display_name) > 16:
+            display_name = display_name[:14] + ".."
+
+        svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <defs>
+    <linearGradient id="cardBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#191d30"/>
+      <stop offset="100%" stop-color="#090b14"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="{pos_color}" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="196" height="236" rx="14" fill="url(#cardBg)" stroke="{pos_color}" stroke-opacity="0.6" stroke-width="2"/>
+  <rect x="2" y="2" width="196" height="80" rx="14" fill="url(#glowGrad)"/>
+  
+  <text x="16" y="40" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="28" fill="#ffffff">{ovr}</text>
+  <rect x="16" y="48" width="44" height="18" rx="5" fill="{pos_color}"/>
+  <text x="38" y="61" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="11" fill="#000000" text-anchor="middle">{pos}</text>
+  
+  <text x="184" y="30" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="9" fill="#94a3b8" text-anchor="end">{card_type}</text>
+  <text x="184" y="46" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="11" fill="{pos_color}" text-anchor="end">{team_short}</text>
+  
+  <circle cx="100" cy="115" r="32" fill="#222842" stroke="{pos_color}" stroke-opacity="0.4" stroke-width="1.5"/>
+  <path d="M56 185 C56 150, 78 138, 100 138 C122 138, 144 150, 144 185 Z" fill="#222842"/>
+  <text x="100" y="122" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="900" font-size="16" fill="#f8fafc" text-anchor="middle">{initials}</text>
+  
+  <rect x="8" y="196" width="184" height="32" rx="7" fill="rgba(10, 12, 22, 0.85)" stroke="{pos_color}" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="100" y="217" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="11" fill="#ffffff" text-anchor="middle">{display_name}</text>
+</svg>""".encode("utf-8")
+
+        self.send_response(200)
+        self.send_header("Content-Type", "image/svg+xml")
+        self.send_header("Content-Length", str(len(svg)))
+        self.send_header("Cache-Control", "public, max-age=3600")
+        self.end_headers()
+        self.wfile.write(svg)
 
     def serve_fallback_svg(self):
         svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
