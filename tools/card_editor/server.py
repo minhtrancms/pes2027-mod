@@ -705,22 +705,63 @@ class CardEditorHandler(BaseHTTPRequestHandler):
         if not pid or pid == "blank":
             self.serve_fallback_svg()
             return
-        img_file = THUMBNAIL_DIR / f"{pid}.png"
-        if img_file.exists():
-            self.serve_file(img_file, "image/png")
-            return
-        
-        # Check base id image if available
+
+        search_dirs = [
+            REPO_ROOT / "tools" / "card_editor" / "web" / "thumbnails",
+            WEB_DIR / "thumbnails",
+            THUMBNAIL_DIR,
+            RESPONSES_DIR / "cdn" / "prd" / "banner" / "player"
+        ]
+
+        # 1. Direct card ID check
+        for sdir in search_dirs:
+            p_png = sdir / f"{pid}.png"
+            if p_png.exists() and p_png.stat().st_size > 1000:
+                self.serve_file(p_png, "image/png")
+                return
+            p_jpg = sdir / f"{pid}.jpg"
+            if p_jpg.exists() and p_jpg.stat().st_size > 1000:
+                self.serve_file(p_jpg, "image/jpeg")
+                return
+
+        # 2. Check base ID if 64-bit card ID
         try:
             base_id = int(pid) & 0xFFFFFF
-            base_img = THUMBNAIL_DIR / f"{base_id}.png"
-            if base_img.exists():
-                self.serve_file(base_img, "image/png")
-                return
+            if base_id != int(pid):
+                for sdir in search_dirs:
+                    p_png = sdir / f"{base_id}.png"
+                    if p_png.exists() and p_png.stat().st_size > 1000:
+                        self.serve_file(p_png, "image/png")
+                        return
         except Exception:
             pass
 
-        # Dynamically render aesthetic eFootball-styled SVG card
+        # 3. Dynamic on-the-fly fetch from eFHUB CDN
+        try:
+            import urllib.request
+            cdn_url = f"https://efimg.com/efootballhub22/images/player_cards/{pid}_l.png"
+            req = urllib.request.Request(cdn_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=4) as res:
+                img_data = res.read()
+                if len(img_data) > 1000:
+                    dest1 = REPO_ROOT / "tools" / "card_editor" / "web" / "thumbnails" / f"{pid}.png"
+                    dest2 = THUMBNAIL_DIR / f"{pid}.png"
+                    dest1.parent.mkdir(parents=True, exist_ok=True)
+                    dest2.parent.mkdir(parents=True, exist_ok=True)
+                    with open(dest1, "wb") as f:
+                        f.write(img_data)
+                    with open(dest2, "wb") as f:
+                        f.write(img_data)
+                    self.send_response(200)
+                    self.send_header("Content-Type", "image/png")
+                    self.send_header("Content-Length", str(len(img_data)))
+                    self.end_headers()
+                    self.wfile.write(img_data)
+                    return
+        except Exception:
+            pass
+
+        # 4. Fallback to aesthetic SVG placeholder
         self.serve_player_card_svg(str(pid))
 
     def serve_player_card_svg(self, pid):
