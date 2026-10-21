@@ -2229,11 +2229,16 @@ static uint64_t freeBytes() {
       self.pick.enabled = YES;
       self.local.enabled = YES;
       if (ok) {
-        self.status.text = @"Đã nhập xong dữ liệu. Đang vào game…";
-        UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Hoàn tất"
-                                                                   message:@"Dữ liệu đã nhập thành công. Có thể xóa file .zip gốc để giải phóng dung lượng."
+        self.status.text = @"Cài đặt thành công! Vui lòng khởi động lại để vào game.";
+        UIAlertController* a = [UIAlertController alertControllerWithTitle:@"Cài đặt thành công"
+                                                                   message:@"Cài đặt thành công, vui lòng khởi động lại để vào game."
                                                             preferredStyle:UIAlertControllerStyleAlert];
-        [a addAction:[UIAlertAction actionWithTitle:@"Vào game" style:UIAlertActionStyleDefault handler:^(UIAlertAction*) { startGame(); }]];
+        [a addAction:[UIAlertAction actionWithTitle:@"Đóng game ngay" style:UIAlertActionStyleDestructive handler:^(UIAlertAction*) {
+          exit(0);
+        }]];
+        [a addAction:[UIAlertAction actionWithTitle:@"Thử vào game ngay" style:UIAlertActionStyleDefault handler:^(UIAlertAction*) {
+          startGame();
+        }]];
         [self presentViewController:a animated:YES completion:nil];
       } else {
         self.bar.hidden = YES;
