@@ -669,7 +669,7 @@ def main():
     ap.add_argument("--dylib", required=True)
     ap.add_argument("--apk", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--bundle-id", default="", help="optional new CFBundleIdentifier (keep empty to let your signer decide)")
+    ap.add_argument("--bundle-id", default="jp.konami.pesactionmobile.WXK53U737T", help="optional new CFBundleIdentifier (default jp.konami.pesactionmobile.WXK53U737T)")
     ap.add_argument("--display-name", default="PES 2027")
     ap.add_argument("--skip-data", action="store_true", help="only build the IPA")
     ap.add_argument("--skip-ipa", action="store_true", help="only build/continue the data pack")
