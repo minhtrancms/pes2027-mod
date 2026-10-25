@@ -186,7 +186,7 @@ class OfflineServer {
         if (b0 == 194 && b1 == 504) return 106788187839904LL; // Epic
         if (b0 == 31 && b1 == 136)  return 88044145253792LL;  // Showtime
         if (b0 == 17 && b1 == 0)    return 88029918174624LL;  // Santos CF
-        if (b0 == 144 && b1 == 136) return 89133993205152LL;
+        if ((b0 == 1138 || b0 == 144) && (b1 == 136 || b1 == 0)) return 89133993205152LL;
         if (b0 == 188 && b1 == 136) return 106770471099808LL;
         if (b0 == 27 && b1 == 136)  return 88039044980128LL;
         if (b0 == 170 && b1 == 136) return 106755438714272LL;

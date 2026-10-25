@@ -2365,6 +2365,21 @@ static void startGame() {
 #include "ZiruMods.inc"
 #include "ZiruJersey.inc"
 
+// Suppress iOS system volume HUD to prevent compositor dropping to 40 FPS
+static void suppressSystemVolumeHUD(UIWindow* win) {
+  if (!win) return;
+  static BOOL sVolumeSuppressed = NO;
+  if (sVolumeSuppressed) return;
+  Class mpVolClass = NSClassFromString(@"MPVolumeView");
+  if (!mpVolClass) return;
+  UIView* volView = [[mpVolClass alloc] initWithFrame:CGRectMake(-1000.0, -1000.0, 1.0, 1.0)];
+  volView.alpha = 0.01f;
+  volView.userInteractionEnabled = NO;
+  [win addSubview:volView];
+  sVolumeSuppressed = YES;
+  ZLog(@"[PERF] MPVolumeView attached — iOS system volume HUD suppressed to lock 60 FPS");
+}
+
 static BOOL hookDidFinish(id self, SEL _cmd, UIApplication* app, NSDictionary* opts) {
   gDelegate = self;
   gLaunchApp = app;
@@ -2381,7 +2396,10 @@ static BOOL hookDidFinish(id self, SEL _cmd, UIApplication* app, NSDictionary* o
 
   // Let UE4 initialize its window and Metal graphics first!
   BOOL res = ((BOOL(*)(id, SEL, id, id))gOrigDidFinish)(self, _cmd, app, opts);
+  // Suppress iOS Volume HUD to prevent compositor dropping to 40 FPS
+  suppressSystemVolumeHUD(getAppWindow(self));
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    suppressSystemVolumeHUD(getAppWindow(self));
     installModButton(getAppWindow(self));
     if (!modsOK) showModError(getAppWindow(self), [NSString stringWithUTF8String:modError.c_str()]);
   });
@@ -2416,7 +2434,9 @@ static BOOL hookDidFinish(id self, SEL _cmd, UIApplication* app, NSDictionary* o
 
 static void hookBecomeActive(id self, SEL _cmd, UIApplication* app) {
   if (gOrigBecomeActive) ((void (*)(id, SEL, id))gOrigBecomeActive)(self, _cmd, app);
+  suppressSystemVolumeHUD(getAppWindow(self));
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    suppressSystemVolumeHUD(getAppWindow(self));
     installModButton(getAppWindow(self));
   });
   if (!gGameStarted && !gActiveImportVC) {
